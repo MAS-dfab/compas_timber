@@ -31,7 +31,11 @@
         ],
         "outputParameters": [
             {
-                "name": "BTLx",
+                "name": "BTLx Object",
+                "description": "BTLx object to pass to other components."
+            },
+            {
+                "name": "BTLx String",
                 "description": "Pretty BTLx string"
             }
         ]

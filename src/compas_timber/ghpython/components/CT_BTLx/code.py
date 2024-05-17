@@ -23,4 +23,4 @@ class WriteBTLx(component):
                 path += ".btlx"
             with open(path, "w") as f:
                 f.write(btlx.btlx_string())
-        return btlx.btlx_string()
+        return btlx, btlx.btlx_string()
