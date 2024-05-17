@@ -199,6 +199,35 @@ class ButtJoint(Joint):
 
         return ph
 
+    def check_joint_boolean(self):
+        """Check if either steepjoint of birdsmouth should be True."""
+        #####CHECK IF STEPJOINT IS VALID#######
+        if self.stepjoint:
+            cross_product_centerlines = self.main_beam.centerline.direction.cross(self.cross_beam.centerline.direction).unitized()
+            dot_product_cp_crossbnormal = float(abs(cross_product_centerlines.dot(self.cross_beam.frame.normal)))
+            if 0.99 < dot_product_cp_crossbnormal or dot_product_cp_crossbnormal < 0.01:
+                self.stepjoint = True
+                self.birdsmouth = False
+                self.mill_depth = 0.0
+                # self.calc_params_stepjoint()
+            else:
+                self.stepjoint = False
+        else:
+            self.stepjoint = False
+            if self.birdsmouth:
+                #####CHECK IF BIRDSMOUTH IS VALID######
+                cross_centerlines = cross_vectors(self.main_beam.centerline.direction, self.cross_beam.centerline.direction)
+                angle2 = angle_vectors(cross_centerlines, self.main_beam.frame.zaxis, deg=True)
+                angle2 = round(angle2, 1) - 180
+                threshold_angle = 3.0
+                if abs(angle2)%90 <= threshold_angle or abs((abs(angle2)-90)%90) <= threshold_angle:
+                    self.birdsmouth = False
+                else:
+                    self.birdsmouth = True
+                    # self.calc_params_birdsmouth()
+
+        return self.stepjoint, self.birdsmouth
+
     def calc_params_birdsmouth(self):
         """
         Calculate the parameters for a birdsmouth joint.
@@ -214,6 +243,10 @@ class ButtJoint(Joint):
             bool: True if the joint creation is successful, False otherwise.
 
         """
+        # if self.stepjoint:
+        #     self.birdsmouth = False
+        #     return False
+
         face_dict = self._beam_side_incidence(self.main_beam, self.cross_beam, ignore_ends=True)
         face_keys = sorted([key for key in face_dict.keys()], key=face_dict.get)
 
@@ -231,9 +264,9 @@ class ButtJoint(Joint):
         self.main_face_index = min(angles_dict.keys(), key=angles_dict.get)
         ref_frame = self.main_beam.faces[self.main_face_index]
 
-        if angle_vectors(og_frame.zaxis, self.main_beam.centerline.direction, deg = True) < 1:
-            self.birdsmouth = False
-            return False
+        # if angle_vectors(og_frame.zaxis, self.main_beam.centerline.direction, deg = True) < 1:
+        #     self.birdsmouth = False
+        #     return False
 
         ref_frame.point = self.main_beam.blank_frame.point
         if self.main_face_index % 2 == 0:
@@ -244,21 +277,20 @@ class ButtJoint(Joint):
             ref_frame.point = ref_frame.point + ref_frame.zaxis * self.main_beam.height * 0.5
 
 
-        cross_ref_main = cross_vectors(og_frame.zaxis, self.main_beam.centerline.direction)
-        cross_centerlines = cross_vectors(self.main_beam.centerline.direction, self.cross_beam.centerline.direction)
-        self.test.append(Line(og_frame.point, og_frame.point + cross_ref_main * 100))
-        angle = angle_vectors(cross_ref_main, og_frame.yaxis, deg=True)
-        angle2 = angle_vectors(cross_centerlines, self.main_beam.frame.zaxis, deg=True)
-        angle2 = round(angle2, 1) - 180
-        threshold_angle = 3.0
+        # cross_ref_main = cross_vectors(og_frame.zaxis, self.main_beam.centerline.direction)
+        # cross_centerlines = cross_vectors(self.main_beam.centerline.direction, self.cross_beam.centerline.direction)
+        # self.test.append(Line(og_frame.point, og_frame.point + cross_ref_main * 100))
+        # angle = angle_vectors(cross_ref_main, og_frame.yaxis, deg=True)
+        # angle2 = angle_vectors(cross_centerlines, self.main_beam.frame.zaxis, deg=True)
+        # angle2 = round(angle2, 1) - 180
+        # threshold_angle = 3.0
         # if angle < 1.0 or angle > 179.0:
         #     self.birdsmouth = False
         #     return False
 
-        if abs(angle2)%90 <= threshold_angle or abs((abs(angle2)-90)%90) <= threshold_angle:
-            print("smaller than threshold", abs(angle2%90))
-            self.birdsmouth = False
-            return False
+        # if abs(angle2)%90 <= threshold_angle or abs((abs(angle2)-90)%90) <= threshold_angle:
+        #     self.birdsmouth = False
+        #     return False
 
         start_point = Point(*intersection_plane_plane_plane(plane1, plane2, Plane.from_frame(ref_frame)))
         coord_point = start_point.transformed(Transformation.from_frame_to_frame(ref_frame, Frame.worldXY()))
@@ -396,15 +428,20 @@ class ButtJoint(Joint):
             dict: A dictionary containing the calculated parameters for the step joint (double cut process)
 
         """
-        #check if beams are coplanar
-        cross_product_centerlines = self.main_beam.centerline.direction.cross(self.cross_beam.centerline.direction).unitized()
-        dot_product_cp_crossbnormal = float(abs(cross_product_centerlines.dot(self.cross_beam.frame.normal)))
-        dot_product_centerline = float(abs(self.main_beam.centerline.direction.dot(self.cross_beam.centerline.direction)))
-        if 0.999 < dot_product_cp_crossbnormal or dot_product_cp_crossbnormal < 0.001:
-            self.mill_depth = 0.0
-        else:
-            self.stepjoint = False
-            return False
+        # # if self.birdsmouth:
+        # #     self.stepjoint = False
+        # #     return False
+        # #check if beams are coplanar
+        # cross_product_centerlines = self.main_beam.centerline.direction.cross(self.cross_beam.centerline.direction).unitized()
+        # dot_product_cp_crossbnormal = float(abs(cross_product_centerlines.dot(self.cross_beam.frame.normal)))
+        # dot_product_centerline = float(abs(self.main_beam.centerline.direction.dot(self.cross_beam.centerline.direction)))
+        # if 0.999 < dot_product_cp_crossbnormal or dot_product_cp_crossbnormal < 0.001:
+        #     self.mill_depth = 0.0
+        #     # print("coplanar")
+        # else:
+        #     # print("not coplanar")
+        #     self.stepjoint = False
+        #     return False
 
         #######ACTIVATE THIS IF YOU DONT WANT STEPJOINT WHEN PERPENDICULAR
         # if 0.999 < dot_product_centerline or dot_product_centerline < 0.001:
@@ -466,7 +503,6 @@ class ButtJoint(Joint):
         vec_angle2 = Vector.from_start_end(Point(startx, self.cross_beam.width - starty), Point(x_main_cutting_face, 0))
         vec_xaxis = Vector.from_start_end(Point(startx, self.cross_beam.width - starty), Point(0, self.cross_beam.width - starty))
         angle2 = vec_xaxis.angle(vec_angle2, True)
-
         if self.ends[str(self.main_beam.key)] == "start":
             StartX = startx
             StartY = starty
@@ -477,7 +513,6 @@ class ButtJoint(Joint):
             StartY = self.main_beam.width - starty
             Angle1 = angle2
             Angle2 = angle1
-
         if StrutInclination == 90.0:
             startx_90deg = self.main_beam.width/4
             starty_90deg = self.main_beam.width/2
@@ -520,7 +555,6 @@ class ButtJoint(Joint):
         else:
             cross_face.point = cross_face.point - cross_face.yaxis * self.cross_beam.width * 0.5
             cross_face.point = cross_face.point + cross_face.zaxis * self.cross_beam.height * 0.5
-
         main_xypoint = Point(StartX, StartY, 0)
         worldxy_xypoint = main_xypoint.transformed(Transformation.from_frame_to_frame(Frame.worldXY(), ref_face))
         cross_xy_point = worldxy_xypoint.transformed(Transformation.from_frame_to_frame(cross_face, Frame.worldXY()))
@@ -598,14 +632,13 @@ class ButtJoint(Joint):
             "ReferencePlaneID": self.cross_face_id,
         }
 
-
         #brep for main beam sub volume
         if (inter_param > 0.5 and StrutInclination < 90) or (inter_param < 0.5 and StrutInclination > 90):
             self.sj_main_sub_volume0 = Brep.from_box(self.cross_beam.blank)
             self.sj_main_sub_volume0.rotate(math.radians(180+Angle_cross+LeadAngle), ref_face.normal, intersection_pt2)
             self.sj_main_sub_volume1 = Brep.from_box(self.cross_beam.blank)
             self.sj_main_sub_volume1.rotate(math.radians(Angle_cross), ref_face.normal, intersection_pt)
-        elif StrutInclination == 90.0:
+        elif 0.99 < math.radians(StrutInclination) < 1.01:
             self.sj_main_sub_volume0 = Brep.from_box(self.cross_beam.blank)
             self.sj_main_sub_volume0.rotate(math.radians(angle_90deg), ref_face.normal, intersection_pt2)
             self.sj_main_sub_volume1 = Brep.from_box(self.cross_beam.blank)

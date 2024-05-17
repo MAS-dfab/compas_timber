@@ -33,18 +33,23 @@ class TButtFactory(object):
         main_part = parts[str(joint.main_beam.key)]
         cross_part = parts[str(joint.cross_beam.key)]
         cut_plane, ref_plane = joint.get_main_cutting_plane()
-
-        if joint.birdsmouth:
-            ref_face = main_part.beam.faces[joint.main_face_index]
-            joint.btlx_params_main["ReferencePlaneID"] = str(main_part.reference_surface_from_beam_face(ref_face))
-            main_part.processings.append(BTLxDoubleCut.create_process(joint.btlx_params_main, "T-Butt Joint"))
-        elif joint.stepjoint:
+        # if joint.birdsmouth:
+        #     ref_face = main_part.beam.faces[joint.main_face_index]
+        #     joint.btlx_params_main["ReferencePlaneID"] = str(main_part.reference_surface_from_beam_face(ref_face))
+        #     main_part.processings.append(BTLxDoubleCut.create_process(joint.btlx_params_main, "T-Butt Joint"))
+        if joint.stepjoint:
             ref_face = main_part.beam.faces[joint.ref_face_id]
             joint.btlx_params_stepjoint_main["ReferencePlaneID"] = str(main_part.reference_surface_from_beam_face(ref_face))
+            print("ref_face_id", joint.btlx_params_stepjoint_main["ReferencePlaneID"])
             main_part.processings.append(BTLxDoubleCut.create_process(joint.btlx_params_stepjoint_main, "T-Butt Joint"))
             ref_face_cross = cross_part.beam.faces[joint.cross_face_id]
             joint.btlx_params_stepjoint_cross["ReferencePlaneID"] = str(cross_part.reference_surface_from_beam_face(ref_face_cross))
+            print("cross_face_id", joint.btlx_params_stepjoint_cross["ReferencePlaneID"])
             cross_part.processings.append(BTLxLap.create_process(joint.btlx_params_stepjoint_cross, "T-Butt Joint pocket"))
+        elif joint.birdsmouth:
+            ref_face = main_part.beam.faces[joint.main_face_index]
+            joint.btlx_params_main["ReferencePlaneID"] = str(main_part.reference_surface_from_beam_face(ref_face))
+            main_part.processings.append(BTLxDoubleCut.create_process(joint.btlx_params_main, "T-Butt Joint"))
         else:
             main_part.processings.append(BTLxJackCut.create_process(main_part, cut_plane, "T-Butt Joint"))
 
