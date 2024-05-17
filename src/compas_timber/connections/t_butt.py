@@ -82,12 +82,6 @@ class TButtJoint(ButtJoint):
                 self.features.append(BrepSubtraction(self.sj_main_sub_volume1))
                 self.cross_beam.add_features(BrepSubtraction(self.brep_sj_cross))
                 self.features.append(BrepSubtraction(self.brep_sj_cross))
-        # if self.birdsmouth:
-        #     if self.calc_params_birdsmouth():
-        #         self.main_beam.add_features(BrepSubtraction(self.bm_sub_volume))
-        #         self.features.append(BrepSubtraction(self.bm_sub_volume))
-        #     else:
-                # do_jack = True
         else:
             if self.mill_depth > 0:
                 self.cross_beam.add_features(MillVolume(self.subtraction_volume()))
@@ -96,21 +90,9 @@ class TButtJoint(ButtJoint):
                 if self.calc_params_birdsmouth():
                     self.main_beam.add_features(BrepSubtraction(self.bm_sub_volume))
                     self.features.append(BrepSubtraction(self.bm_sub_volume))
-            else: #do_jack
-                print("do jack")
+            else:
                 self.main_beam.add_features(CutFeature(cutting_plane))
-                print("add_features")
                 self.features.append(cutting_plane)
-                print("append")
         if self.drill_diameter > 0:
             self.cross_beam.add_features(DrillFeature(*self.calc_params_drilling()))
             self.features.append(DrillFeature(*self.calc_params_drilling()))
-        # if self.stepjoint:
-        #     if self.calc_params_stepjoint():
-        #         pass
-        #         self.main_beam.add_features(BrepSubtraction(self.sj_main_sub_volume0))
-        #         self.features.append(BrepSubtraction(self.sj_main_sub_volume0))
-        #         self.main_beam.add_features(BrepSubtraction(self.sj_main_sub_volume1))
-        #         self.features.append(BrepSubtraction(self.sj_main_sub_volume1))
-        #         self.cross_beam.add_features(BrepSubtraction(self.brep_sj_cross))
-        #         self.features.append(BrepSubtraction(self.brep_sj_cross))
