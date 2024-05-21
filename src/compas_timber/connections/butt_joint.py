@@ -202,10 +202,11 @@ class ButtJoint(Joint):
     def check_joint_boolean(self):
         """Check if either steepjoint of birdsmouth should be True."""
         #####CHECK IF STEPJOINT IS VALID#######
+        threshhold_value = 0.001
         if self.stepjoint:
             cross_product_centerlines = self.main_beam.centerline.direction.cross(self.cross_beam.centerline.direction).unitized()
             dot_product_cp_crossbnormal = float(abs(cross_product_centerlines.dot(self.cross_beam.frame.normal)))
-            if 1.0 == dot_product_cp_crossbnormal or dot_product_cp_crossbnormal == 0.0:
+            if (1-threshhold_value) < dot_product_cp_crossbnormal or dot_product_cp_crossbnormal < threshhold_value:
                 self.stepjoint = True
                 self.birdsmouth = False
                 self.mill_depth = 0.0
