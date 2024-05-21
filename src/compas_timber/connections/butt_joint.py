@@ -205,7 +205,7 @@ class ButtJoint(Joint):
         if self.stepjoint:
             cross_product_centerlines = self.main_beam.centerline.direction.cross(self.cross_beam.centerline.direction).unitized()
             dot_product_cp_crossbnormal = float(abs(cross_product_centerlines.dot(self.cross_beam.frame.normal)))
-            if 0.99 < dot_product_cp_crossbnormal or dot_product_cp_crossbnormal < 0.01:
+            if 1.0 == dot_product_cp_crossbnormal or dot_product_cp_crossbnormal == 0.0:
                 self.stepjoint = True
                 self.birdsmouth = False
                 self.mill_depth = 0.0
@@ -219,7 +219,7 @@ class ButtJoint(Joint):
                 cross_centerlines = cross_vectors(self.main_beam.centerline.direction, self.cross_beam.centerline.direction)
                 angle2 = angle_vectors(cross_centerlines, self.main_beam.frame.zaxis, deg=True)
                 angle2 = round(angle2, 1) - 180
-                threshold_angle = 3.0
+                threshold_angle = 5.0
                 if abs(angle2)%90 <= threshold_angle or abs((abs(angle2)-90)%90) <= threshold_angle:
                     self.birdsmouth = False
                 else:
