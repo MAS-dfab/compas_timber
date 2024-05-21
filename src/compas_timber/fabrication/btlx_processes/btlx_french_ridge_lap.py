@@ -51,7 +51,7 @@ class BTLxFrenchRidgeLap(object):
 
     PROCESS_TYPE = "FrenchRidgeLap"
 
-    def __init__(self, part, joint, is_top, drill_diameter=0.0):
+    def __init__(self, part, joint, drill=False, joint_name=None):
         for beam in joint.beams:
             if beam.key == part.key:
                 self.beam = beam
@@ -59,14 +59,21 @@ class BTLxFrenchRidgeLap(object):
                 self.other_beam = beam
         self.part = part
         self.joint = joint
-        self.is_top = is_top
+        self.drill = drill
         self.orientation = joint.ends[str(part.key)]
         self._ref_edge = True
-        self._drill_hole = True if drill_diameter > 0 else False
-        self.drill_hole_diameter = float(drill_diameter)
+
+        self._drill_hole = True if joint.drill_diameter > 0 and self.drill==True else False
+        self.drill_hole_diameter = float(joint.drill_diameter)
 
         self.ref_face_index = self.joint.reference_face_indices[str(self.beam.key)]
         self.ref_face = self.part.reference_surface_planes(str(self.ref_face_index))
+
+        if joint_name:
+            self.name = joint_name
+        else:
+            self.name = "french_ridge_lap"
+
 
         """
         the following attributes are required for all processes, but the keys and values of header_attributes are process specific.
@@ -137,8 +144,6 @@ class BTLxFrenchRidgeLap(object):
                 self.angle_rad = abs(self.angle_rad)
 
             self.startX = abs(self.beam.width / math.tan(self.angle_rad))
-            # print(self.angle_lines, "angle_lines")
-            # print(self.startX)
             if self.angle_lines < math.pi / 2:
                 self.startX = 0.0
 
@@ -158,19 +163,9 @@ class BTLxFrenchRidgeLap(object):
             else:
                 self.startX = self.beam.blank_length + self.startX
 
-        # print("orientation: ", self.orientation, " angle: ", self.angle_rad, " start: ", self.startX)
-        # print(
-        #     "ref_edge: ",
-        #     self.ref_edge,
-        #     " drill_hole: ",
-        #     self.drill_hole,
-        #     " drill_hole_diameter: ",
-        #     self.drill_hole_diameter,
-        # )
-
     @classmethod
-    def create_process(cls, part, joint, is_top, drill_diameter):
-        frl_process = BTLxFrenchRidgeLap(part, joint, is_top, drill_diameter)
+    def create_process(cls, part, joint, drill, joint_name = None):
+        frl_process = BTLxFrenchRidgeLap(part, joint, drill, joint_name)
         return BTLxProcess(
             BTLxFrenchRidgeLap.PROCESS_TYPE, frl_process.header_attributes, frl_process.process_parameters
         )
