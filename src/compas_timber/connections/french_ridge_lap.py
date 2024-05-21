@@ -40,7 +40,7 @@ class FrenchRidgeLapJoint(Joint):
     SUPPORTED_TOPOLOGY = JointTopology.TOPO_L
 
     def __init__(self, main_beam=None, cross_beam=None, drill_diameter=0.0, **kwargs):
-        super(FrenchRidgeLapJoint, self).__init__(beams=(main_beam, cross_beam), **kwargs)
+        super(FrenchRidgeLapJoint, self).__init__(main_beam, cross_beam, drill_diameter, **kwargs)
         self.main_beam= main_beam
         self.cross_beam = cross_beam
         self.main_beam_key = main_beam.key if main_beam else None
@@ -49,22 +49,23 @@ class FrenchRidgeLapJoint(Joint):
         self.drill_diameter = float(drill_diameter)
 
         self.reference_face_indices = {}
-        self.check_geometry()
 
     @property
     def __data__(self):
         data_dict = {
-            "main_beam_key ": self.main_beam_key,
-            "cross_beam.key": self.cross_beam.key,
+            "main_beam_key": self.main_beam_key,
+            "cross_beam_key": self.cross_beam_key,
+            "drill_diameter": self.drill_diameter,
         }
         data_dict.update(super(FrenchRidgeLapJoint, self).__data__)
         return data_dict
 
     @classmethod
     def __from_data__(cls, value):
-        instance = cls(frame=Frame.__from_data__(value["frame"]), key=value["key"])
+        instance = cls(**value)
         instance.main_beam_key = value["main_beam_key"]
         instance.cross_beam_key = value["cross_beam_key"]
+        instance.drill_diameter = value["drill_diameter"]
         return instance
 
     @property
@@ -107,6 +108,7 @@ class FrenchRidgeLapJoint(Joint):
         self.cross_beam.add_blank_extension(*self.cross_beam.extension_to_plane(self.cutting_plane_bottom), joint_key=self.key)
 
     def add_features(self):
+        self.check_geometry()
         self.features = []
 
     def check_geometry(self):

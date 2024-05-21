@@ -74,9 +74,13 @@ class ButtJoint(Joint):
     @property
     def __data__(self):
         data_dict = {
+            "beams": [beam.key for beam in self.beams],
             "main_beam_key": self.main_beam_key,
             "cross_beam_key": self.cross_beam_key,
             "mill_depth": self.mill_depth,
+            "drill_diameter": self.drill_diameter,
+            "birdsmouth": self.birdsmouth,
+            "stepjoint": self.stepjoint,
         }
         data_dict.update(super(ButtJoint, self).__data__)
         return data_dict
@@ -86,6 +90,10 @@ class ButtJoint(Joint):
         instance = cls(**value)
         instance.main_beam_key = value["main_beam_key"]
         instance.cross_beam_key = value["cross_beam_key"]
+        instance.mill_depth = value["mill_depth"]
+        instance.drill_diameter = value["drill_diameter"]
+        instance.birdsmouth = value["birdsmouth"]
+        instance.stepjoint = value["stepjoint"]
         return instance
 
     @property
