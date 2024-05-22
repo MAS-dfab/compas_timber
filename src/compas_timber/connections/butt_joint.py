@@ -6,7 +6,7 @@ from compas.geometry import closest_point_on_line
 from compas.geometry import distance_line_line
 from compas.geometry import intersection_plane_plane
 from compas.geometry import intersection_line_plane
-from compas.geometry import intersection_line_line
+from compas.geometry import intersection_line_line, distance_point_line
 from compas.geometry import Plane
 from compas.geometry import Line
 from compas.geometry import Polyhedron
@@ -234,6 +234,7 @@ class ButtJoint(Joint):
                     self.birdsmouth = False
                 else:
                     self.birdsmouth = True
+
             if not self.force_birdsmouth:
                 self.birdsmouth = False
 
@@ -264,6 +265,7 @@ class ButtJoint(Joint):
         frame1, og_frame = self.get_main_cutting_plane()  # offset pocket mill plane
         frame2 = self.cross_beam.faces[face_keys[1]]
 
+        print(frame1, frame2)
         self.test.append(og_frame)
 
         plane1, plane2 = Plane(frame1.point, -frame1.zaxis), Plane.from_frame(frame2)
@@ -271,7 +273,18 @@ class ButtJoint(Joint):
 
         angles_dict = {}
         for i, face in enumerate(self.main_beam.faces[0:4]):
-            angles_dict[i] = face.normal.angle(intersect_vec)
+            inter_pt = intersection_plane_plane_plane(plane1, plane2, Plane.from_frame(face))
+            if inter_pt is None:
+                continue
+            else:
+                dist = distance_point_line(inter_pt,self.main_beam.centerline)
+                print(dist, self.main_beam.key, self.cross_beam.key)
+                if dist < 30.5:
+                    angles_dict[i] = face.normal.angle(intersect_vec)
+        # if angles dict is empty then return False
+        if not angles_dict:
+            print("Not birdsmouthing")
+            return False
         self.main_face_index = min(angles_dict.keys(), key=angles_dict.get)
         ref_frame = self.main_beam.faces[self.main_face_index]
 
@@ -287,7 +300,7 @@ class ButtJoint(Joint):
             ref_frame.point = ref_frame.point - ref_frame.yaxis * self.main_beam.width * 0.5
             ref_frame.point = ref_frame.point + ref_frame.zaxis * self.main_beam.height * 0.5
 
-
+        print(ref_frame)
         # cross_ref_main = cross_vectors(og_frame.zaxis, self.main_beam.centerline.direction)
         # cross_centerlines = cross_vectors(self.main_beam.centerline.direction, self.cross_beam.centerline.direction)
         # self.test.append(Line(og_frame.point, og_frame.point + cross_ref_main * 100))
@@ -312,10 +325,13 @@ class ButtJoint(Joint):
         s = Scale.from_factors([10.0, 10.0, 10.0], Frame(start_point, ref_frame.xaxis, ref_frame.yaxis))
         self.bm_sub_volume.transform(s)
 
-
+        # THIS IS NOT WORKING!!!!!!!!!!
         dot_frame1 = plane1.normal.dot(ref_frame.yaxis)
-        if dot_frame1 > 0:
-            plane1, plane2 = plane2, plane1
+        # if 1.1 < abs(dot_frame1) > 0.9:
+        #     pass
+        # else:
+        #     print("I flip")
+        #     plane1, plane2 = plane2, plane1
 
         intersect_vec1 = Vector.from_start_end(*intersection_plane_plane(plane1, Plane.from_frame(ref_frame)))
         intersect_vec2 = Vector.from_start_end(*intersection_plane_plane(plane2, Plane.from_frame(ref_frame)))
@@ -335,6 +351,10 @@ class ButtJoint(Joint):
 
         Inclination1 = angle_vectors(ref_frame.zaxis, plane1.normal, deg=True)
         Inclination2 = angle_vectors(ref_frame.zaxis, plane2.normal, deg=True)
+
+        if Angle1 > Angle2:
+            Angle1, Angle2 = Angle2, Angle1
+            Inclination1, Inclination2 = Inclination2, Inclination1
 
         self.btlx_params_main = {
             "Orientation": self.ends[str(self.main_beam.key)],
