@@ -67,13 +67,13 @@ class TButtJoint(ButtJoint):
         if self.features:
             self.main_beam.remove_features(self.features)
         cutting_plane = None
+        self.add_extensions()
         try:
             cutting_plane = self.get_main_cutting_plane()[0]
         except AttributeError as ae:
             raise BeamJoinningError(beams=self.beams, joint=self, debug_info=str(ae), debug_geometries=[cutting_plane])
         except Exception as ex:
             raise BeamJoinningError(beams=self.beams, joint=self, debug_info=str(ex))
-        self.check_joint_boolean()
         if self.stepjoint:
             if self.calc_params_stepjoint():
                 self.main_beam.add_features(BrepSubtraction(self.sj_main_sub_volume0))

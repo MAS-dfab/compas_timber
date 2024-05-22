@@ -62,7 +62,8 @@ class ButtJoint(Joint):
         self.mill_depth = mill_depth
         self.drill_diameter = float(drill_diameter)
         self.birdsmouth = birdsmouth
-        self.stepjoint = stepjoint
+        self.force_birdsmouth = True
+        self.stepjoint = False
         self.btlx_params_main = {}
         self.btlx_params_cross = {}
         self.btlx_drilling_params_cross = {}
@@ -214,7 +215,7 @@ class ButtJoint(Joint):
         if self.stepjoint:
             cross_product_centerlines = self.main_beam.centerline.direction.cross(self.cross_beam.centerline.direction).unitized()
             dot_product_cp_crossbnormal = float(abs(cross_product_centerlines.dot(self.cross_beam.frame.normal)))
-            if (1-threshhold_value) < dot_product_cp_crossbnormal or dot_product_cp_crossbnormal < threshhold_value:
+            if (1-threshhold_value) < dot_product_cp_crossbnormal < threshhold_value:
                 self.stepjoint = True
                 self.birdsmouth = False
                 self.mill_depth = 0.0
@@ -224,15 +225,17 @@ class ButtJoint(Joint):
             self.stepjoint = False
             if self.birdsmouth:
                 #####CHECK IF BIRDSMOUTH IS VALID######
-                cross_centerlines = cross_vectors(self.main_beam.centerline.direction, self.cross_beam.centerline.direction)
-                angle2 = angle_vectors(cross_centerlines, self.main_beam.frame.zaxis, deg=True)
-                angle2 = round(angle2, 1) - 180
-                threshold_angle = 5.0
-                if abs(angle2)%90 <= threshold_angle or abs((abs(angle2)-90)%90) <= threshold_angle:
+                dot = dot_vectors(self.main_beam.frame.zaxis, self.cross_beam.frame.zaxis)
+                # if dot is close enough to being normal or parallel
+                # parallel: dot = 1, normal: dot = 0
+                if abs(dot) < 0.01:
+                    self.birdsmouth = False
+                elif 0.99 < abs(dot) < 1.01:
                     self.birdsmouth = False
                 else:
                     self.birdsmouth = True
-                    # self.calc_params_birdsmouth()
+            if not self.force_birdsmouth:
+                self.birdsmouth = False
 
         return self.stepjoint, self.birdsmouth
 
