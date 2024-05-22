@@ -67,7 +67,7 @@ class TButtJoint(ButtJoint):
         if self.features:
             self.main_beam.remove_features(self.features)
         cutting_plane = None
-        self.add_extensions()
+        # self.add_extensions()
         try:
             cutting_plane = self.get_main_cutting_plane()[0]
         except AttributeError as ae:
