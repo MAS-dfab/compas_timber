@@ -92,6 +92,8 @@ class TButtJoint(ButtJoint):
                     self.features.append(BrepSubtraction(self.bm_sub_volume))
                 else:
                     self.birdsmouth = False
+                    self.main_beam.add_features(CutFeature(cutting_plane))
+                    self.features.append(cutting_plane)
             else:
                 self.main_beam.add_features(CutFeature(cutting_plane))
                 self.features.append(cutting_plane)
