@@ -265,7 +265,7 @@ class ButtJoint(Joint):
         frame1, og_frame = self.get_main_cutting_plane()  # offset pocket mill plane
         frame2 = self.cross_beam.faces[face_keys[1]]
 
-        print(frame1, frame2)
+        #print(frame1, frame2)
         self.test.append(og_frame)
 
         plane1, plane2 = Plane(frame1.point, -frame1.zaxis), Plane.from_frame(frame2)
@@ -278,12 +278,12 @@ class ButtJoint(Joint):
                 continue
             else:
                 dist = distance_point_line(inter_pt,self.main_beam.centerline)
-                print(dist, self.main_beam.key, self.cross_beam.key)
+                #print(dist, self.main_beam.key, self.cross_beam.key)
                 if dist < 30.5:
                     angles_dict[i] = face.normal.angle(intersect_vec)
         # if angles dict is empty then return False
         if not angles_dict:
-            print("Not birdsmouthing")
+            #print("Not birdsmouthing")
             return False
         self.main_face_index = min(angles_dict.keys(), key=angles_dict.get)
         ref_frame = self.main_beam.faces[self.main_face_index]
@@ -300,7 +300,7 @@ class ButtJoint(Joint):
             ref_frame.point = ref_frame.point - ref_frame.yaxis * self.main_beam.width * 0.5
             ref_frame.point = ref_frame.point + ref_frame.zaxis * self.main_beam.height * 0.5
 
-        print(ref_frame)
+        #print(ref_frame)
         # cross_ref_main = cross_vectors(og_frame.zaxis, self.main_beam.centerline.direction)
         # cross_centerlines = cross_vectors(self.main_beam.centerline.direction, self.cross_beam.centerline.direction)
         # self.test.append(Line(og_frame.point, og_frame.point + cross_ref_main * 100))
