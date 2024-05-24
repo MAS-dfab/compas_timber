@@ -62,7 +62,7 @@ class Joint(Data):
 
     def __init__(self, frame=None, key=None, beams=None, **kwargs):
         super(Joint, self).__init__()
-        self.frame = frame or Frame.worldXY()
+        self.frame = Frame.worldXY()
         self.key = key
         self._beams = beams
         self.features = []
