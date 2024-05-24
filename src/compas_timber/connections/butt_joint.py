@@ -13,8 +13,6 @@ from compas.geometry import Polyhedron
 from compas.geometry import Point
 from compas.geometry import Vector
 from compas.geometry import Transformation
-from compas.geometry import Polyline
-from compas.geometry import Curve
 from compas.geometry import angle_vectors_signed
 from compas.geometry import angle_vectors
 from compas.geometry import cross_vectors
@@ -116,6 +114,15 @@ class ButtJoint(Joint):
 
         return [self.cross_beam.faces[(face_indices[0] + 1) % 4], self.cross_beam.faces[(face_indices[0] + 3) % 4]]
 
+    def side_surfaces_main(self):
+        assert self.main_beam and self.cross_beam
+
+        cross_vect = cross_vectors(self.main_beam.centerline.direction, self.cross_beam.centerline.direction)
+        main_beam_faces = self.main_beam.faces[:4]
+        main_beam_faces.sort(key=lambda face: abs(dot_vectors(cross_vect, face.normal)) )
+
+        return main_beam_faces[:2]
+
     def front_back_surface_main(self):
         assert self.main_beam and self.cross_beam
 
@@ -147,8 +154,9 @@ class ButtJoint(Joint):
         vertices = []
         front_frame, back_frame = self.front_back_surface_main() #main_beam
         top_frame, bottom_frame = self.get_main_cutting_plane() #cross_beam -- cutting/offsetted_cutting plane
-        sides = self.side_surfaces_cross() #cross_beam -- side faces
-        for i, side in enumerate(sides):
+        sides_cross = self.side_surfaces_cross() #cross_beam -- side faces
+        sides_main = self.side_surfaces_main() #main_beam -- side faces
+        for i, side in enumerate(sides_cross):
             points = []
             for frame in [bottom_frame, top_frame]:
                 for fr in [front_frame, back_frame]:
@@ -174,11 +182,16 @@ class ButtJoint(Joint):
 
             vertices.extend([Point(*top_min), Point(*top_max), Point(*bottom_max), Point(*bottom_min)])
 
-        top_front = Line(vertices[0], vertices[4])
-        top_back = Line(vertices[1], vertices[5])
-        _len = distance_line_line(top_front, top_back)
-
         front_line = Line(*intersection_plane_plane(Plane.from_frame(front_frame), Plane.from_frame(top_frame)))
+
+        side_lines = [Line(*intersection_plane_plane(Plane.from_frame(side), Plane.from_frame(top_frame))) for side in sides_main] ###intersection lines of the main side faces with the crossing plane
+        pocket_angle = angle_vectors_signed(self.main_beam.centerline.direction, top_frame.zaxis, top_frame.yaxis) ###angle between the intersection line and the normal of the cutting plane
+        pocket_extension = abs(math.tan(pocket_angle)*self.mill_depth) ### addition to the length to avoid collision with the pocket edge
+        _len = distance_line_line(*side_lines) + pocket_extension  ### final lenth of the pocket
+        _len = 61.5 if _len < 61.5 else _len
+        # top_front = Line(vertices[0], vertices[4])
+        # top_back = Line(vertices[1], vertices[5])
+        # _len = distance_line_line(top_front, top_back)
 
         self.btlx_params_cross["depth"] = self.mill_depth
 
@@ -195,7 +208,7 @@ class ButtJoint(Joint):
 
         center = (vertices[0] + vertices[1] + vertices[2] + vertices[3]) * 0.25
         angle = angle_vectors_signed(
-            subtract_vectors(vertices[0], center), subtract_vectors(vertices[1], center), sides[0].zaxis
+            subtract_vectors(vertices[0], center), subtract_vectors(vertices[1], center), sides_cross[0].zaxis
         )
         if angle > 0:
             ph = Polyhedron(
@@ -265,7 +278,7 @@ class ButtJoint(Joint):
         frame1, og_frame = self.get_main_cutting_plane()  # offset pocket mill plane
         frame2 = self.cross_beam.faces[face_keys[1]]
 
-        print(frame1, frame2)
+        # print(frame1, frame2)
         self.test.append(og_frame)
 
         plane1, plane2 = Plane(frame1.point, -frame1.zaxis), Plane.from_frame(frame2)
@@ -278,12 +291,12 @@ class ButtJoint(Joint):
                 continue
             else:
                 dist = distance_point_line(inter_pt,self.main_beam.centerline)
-                print(dist, self.main_beam.key, self.cross_beam.key)
-                if dist < 30.5:
+                # print(dist, self.main_beam.key, self.cross_beam.key)
+                if dist < 40.0:
                     angles_dict[i] = face.normal.angle(intersect_vec)
         # if angles dict is empty then return False
         if not angles_dict:
-            print("Not birdsmouthing")
+            # print("Not birdsmouthing")
             return False
         self.main_face_index = min(angles_dict.keys(), key=angles_dict.get)
         ref_frame = self.main_beam.faces[self.main_face_index]
@@ -300,7 +313,7 @@ class ButtJoint(Joint):
             ref_frame.point = ref_frame.point - ref_frame.yaxis * self.main_beam.width * 0.5
             ref_frame.point = ref_frame.point + ref_frame.zaxis * self.main_beam.height * 0.5
 
-        print(ref_frame)
+        # print(ref_frame)
         # cross_ref_main = cross_vectors(og_frame.zaxis, self.main_beam.centerline.direction)
         # cross_centerlines = cross_vectors(self.main_beam.centerline.direction, self.cross_beam.centerline.direction)
         # self.test.append(Line(og_frame.point, og_frame.point + cross_ref_main * 100))
