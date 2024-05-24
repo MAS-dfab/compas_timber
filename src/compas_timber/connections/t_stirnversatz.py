@@ -16,14 +16,11 @@ from compas.geometry import translate_points
 from compas.geometry import cross_vectors
 import math
 
-
 class TStirnversatzJoint(Joint):
 
     SUPPORTED_TOPOLOGY = JointTopology.TOPO_T
 
-    def __init__(
-        self, cross_beam=None, main_beam=None, cut_depth=0.25, extend_cut=True
-    ):  # TODO Why main & cross swapped???
+    def __init__(self, cross_beam=None, main_beam=None, cut_depth=0.25, extend_cut=True): #TODO Why main & cross swapped???
         super(TStirnversatzJoint, self).__init__(main_beam, cross_beam, cut_depth)
         self.main_beam = main_beam
         self.cross_beam = cross_beam
@@ -34,10 +31,10 @@ class TStirnversatzJoint(Joint):
         self.features = []
         self.cross_cutting_plane_1 = None
         self.cross_cutting_plane_2 = None
-        self.planetogh = []  # TODO Remove
-        self.linetogh = []  # TODO Remove
-        self.pointtogh = []  # TODO Remove
-        self.polyhedrontogh = []  # TODO Remove
+        self.planetogh = [] # TODO Remove
+        self.linetogh = [] # TODO Remove
+        self.pointtogh = [] # TODO Remove
+        self.polyhedrontogh = [] # TODO Remove
 
     @property
     def data(self):
@@ -73,10 +70,10 @@ class TStirnversatzJoint(Joint):
         plane = Plane(origin, bisector)
         return plane
 
-    # find the Face on cross_beam where main_beam intersects
-    # TODO simplify with Chen!
+    #find the Face on cross_beam where main_beam intersects
+    #TODO simplify with Chen!
     def get_main_intersection_frame(self):
-        diagonal = math.sqrt(self.main_beam.width**2 + self.main_beam.height**2)
+        diagonal = math.sqrt(self.main_beam.width ** 2 + self.main_beam.height ** 2)
         main_frames = self.main_beam.faces[:4]
         cross_centerline = self.cross_beam.centerline
         cross_centerpoint = midpoint_line(self.cross_beam.centerline)
@@ -157,22 +154,18 @@ class TStirnversatzJoint(Joint):
             points.append(intersection_line_plane(i, plane_side[0]))
             points.append(intersection_line_plane(i, plane_side[1]))
 
-        # TODO fix with Chen: Polyhedron.from_planes not working because numpy missing ?????
-        main_cutting_volume = Polyhedron(
-            points,
-            [
+        #TODO fix with Chen: Polyhedron.from_planes not working because numpy missing ?????
+        main_cutting_volume = Polyhedron(points,
+                   [
                 [0, 2, 4],  # front
                 [1, 5, 3],  # back
                 [0, 1, 3, 2],  # first
                 [2, 3, 5, 4],  # second
                 [4, 5, 1, 0],  # third
             ],
-        )
+            )
 
         return main_cutting_volume
-
-    def add_extensions(self):
-        pass
 
     def add_features(self):
 
