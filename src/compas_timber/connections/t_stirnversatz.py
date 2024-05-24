@@ -167,6 +167,9 @@ class TStirnversatzJoint(Joint):
 
         return main_cutting_volume
 
+    def add_extensions(self):
+        pass
+
     def add_features(self):
 
         assert self.main_beam and self.cross_beam  # should never happen
@@ -174,9 +177,14 @@ class TStirnversatzJoint(Joint):
         cross_cutting_plane1, cross_cutting_plane2 = self.get_cross_cutting_planes()
         main_cutting_vol = self.get_main_cutting_volume()
 
-        trim_feature = CutFeature(cross_cutting_plane1)
-        self.cross_beam.add_features(trim_feature)
-        trim_feature = CutFeature(cross_cutting_plane2)
-        self.cross_beam.add_features(trim_feature)
-        volume = MillVolume(main_cutting_vol)
-        self.main_beam.add_features(volume)
+        self.cross_beam.add_features(CutFeature(cross_cutting_plane1))
+        self.features.append(cross_cutting_plane1)
+        print("cross_cutting_plane1", cross_cutting_plane1)
+
+        self.cross_beam.add_features(CutFeature(cross_cutting_plane2))
+        self.features.append(cross_cutting_plane2)
+        print("cross_cutting_plane2", cross_cutting_plane2)
+
+        self.main_beam.add_features(MillVolume(main_cutting_vol))
+        self.features.append(MillVolume(main_cutting_vol))
+        print("main_cutting_vol", main_cutting_vol)
