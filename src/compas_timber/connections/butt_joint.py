@@ -441,15 +441,18 @@ class ButtJoint(Joint):
 
         inter_centerlines = intersection_line_line(self.cross_beam.centerline, self.main_beam.centerline)
         inter_param = self.cross_beam.centerline.closest_point(Point(*inter_centerlines[0]), True)[1]
+        print(inter_param)
 
         angles_dict = {}
         for i, face in enumerate(self.main_beam.faces[0:4]):
             angles_dict[i] = face.normal.angle_signed(self.main_beam.faces[face_keys[0]].normal, centerline_vec)
         faces_ordered = sorted(angles_dict.keys(), key=angles_dict.get)
-        if (inter_param > 0.5 and StrutInclination < 89.9) or (inter_param < 0.5 and StrutInclination > 90.1):
-            self.ref_face_id = faces_ordered[2]
-        elif 89.9 <= StrutInclination <= 90.1:
+
+        if 89.9 <= StrutInclination <= 90.1:
             self.ref_face_id = faces_ordered[0]
+        elif (inter_param > 0.50000001 and StrutInclination < 89.9) or (inter_param < 0.4999999 and StrutInclination > 90.1):
+            print ("here")
+            self.ref_face_id = faces_ordered[2]
         else:
             self.ref_face_id = faces_ordered[0]
 
@@ -464,6 +467,7 @@ class ButtJoint(Joint):
             ref_face.point = ref_face.point + ref_face.zaxis * self.main_beam.height * 0.5
 
         strut_inclination = StrutInclination
+        print(StrutInclination)
         if StrutInclination < 89.9:
             angle1 = (180 - StrutInclination)/2
             strut_inclination = StrutInclination
@@ -500,11 +504,13 @@ class ButtJoint(Joint):
                 Angle2 = 90-angle_90deg
         else:
             if self.ends[str(self.main_beam.key)] == "start":
+                print("start")
                 StartX = startx
                 StartY = starty
                 Angle1 = 180-angle1
                 Angle2 = 180-angle2
             else:
+                print("end")
                 StartX = self.main_beam.blank_length - startx
                 StartY = self.main_beam.width - starty
                 Angle1 = angle2
@@ -545,26 +551,7 @@ class ButtJoint(Joint):
         StartX_cross = cross_xy_point[0]
         StartY_cross = cross_xy_point[1]
 
-        if (inter_param > 0.5 and StrutInclination < 89.9) or (inter_param < 0.5 and StrutInclination > 90.1):
-            orientation = self.ends[str(self.cross_beam.key)]
-            if self.ends[str(self.cross_beam.key)] == "start":
-                self.cross_face_id = min(angles_dict_cross.keys(), key=angles_dict_cross.get)
-                cross_face = self.cross_beam.faces[self.cross_face_id]
-                StartY_cross = self.cross_beam.width - StartY_cross
-                if self.ends[str(self.main_beam.key)] == "start":
-                    Angle_cross = 180 - Angle1
-                    LeadAngle = 180 - (Angle1 - Angle2)
-                else:
-                    Angle_cross = Angle2
-                    LeadAngle = 180 - (Angle1 - Angle2)
-            else:
-                if self.ends[str(self.main_beam.key)] == "start":
-                    Angle_cross = 180 - Angle1
-                    LeadAngle = 180 - (Angle1 - Angle2)
-                else:
-                    Angle_cross = Angle2
-                    LeadAngle = 180 - (Angle1 - Angle2)
-        elif 89.9 <= StrutInclination <= 90.1:
+        if 89.9 <= StrutInclination <= 90.1:
             orientation = self.ends[str(self.cross_beam.key)]
             Angle_cross = angle_90deg
             LeadAngle = 180-angle_90deg*2
@@ -572,13 +559,40 @@ class ButtJoint(Joint):
                 self.cross_face_id = min(angles_dict_cross.keys(), key=angles_dict_cross.get)
                 cross_face = self.cross_beam.faces[self.cross_face_id]
                 StartY_cross = self.cross_beam.width - StartY_cross
+        elif (inter_param > 0.5 and StrutInclination < 89.9) or (inter_param < 0.5 and StrutInclination > 90.1):
+            print("inter_param")
+            orientation = self.ends[str(self.cross_beam.key)]
+            if self.ends[str(self.cross_beam.key)] == "start":
+                self.cross_face_id = min(angles_dict_cross.keys(), key=angles_dict_cross.get)
+                cross_face = self.cross_beam.faces[self.cross_face_id]
+                StartY_cross = self.cross_beam.width - StartY_cross
+                if self.ends[str(self.main_beam.key)] == "start":
+                    print("start-start")
+                    Angle_cross = 180 - Angle1
+                    LeadAngle = 180 - (Angle1 - Angle2)
+                else:
+                    print("start-end")
+                    Angle_cross = Angle2
+                    LeadAngle = 180 - (Angle1 - Angle2)
+            else:
+                if self.ends[str(self.main_beam.key)] == "start":
+                    print("end-start")
+                    Angle_cross = 180 - Angle1
+                    LeadAngle = 180 - (Angle1 - Angle2)
+                else:
+                    print("end-end")
+                    Angle_cross = Angle2
+                    LeadAngle = 180 - (Angle1 - Angle2)
         else:
+            print("else")
             if self.ends[str(self.cross_beam.key)] == "start":
                 if self.ends[str(self.main_beam.key)] == "start":
+                    print("start-start")
                     orientation = "end"
                     Angle_cross = 180 - Angle1
                     LeadAngle = 180 - (Angle1 - Angle2)
                 else:
+                    print("start-end")
                     orientation = "end"
                     Angle_cross = Angle2
                     LeadAngle = 180 - (Angle1 - Angle2)
@@ -587,10 +601,12 @@ class ButtJoint(Joint):
                 cross_face = self.cross_beam.faces[self.cross_face_id]
                 StartY_cross = self.cross_beam.width - StartY_cross
                 if self.ends[str(self.main_beam.key)] == "start":
+                    print("end-start")
                     orientation = "start"
                     Angle_cross = 180 - Angle1
                     LeadAngle = 180 - (Angle1 - Angle2)
                 else:
+                    print("end-end")
                     orientation = "start"
                     Angle_cross = Angle2
                     LeadAngle = (180 - Angle1) + Angle2
@@ -615,33 +631,52 @@ class ButtJoint(Joint):
             "ReferencePlaneID": self.cross_face_id,
         }
 
-        #brep for main beam sub volume
-        if (inter_param > 0.5 and StrutInclination < 90) or (inter_param < 0.5 and StrutInclination > 90):
-            self.sj_main_sub_volume0 = Brep.from_box(self.cross_beam.blank)
-            self.sj_main_sub_volume0.rotate(math.radians(180+Angle_cross+LeadAngle), ref_face.normal, intersection_pt2)
-            self.sj_main_sub_volume1 = Brep.from_box(self.cross_beam.blank)
-            self.sj_main_sub_volume1.rotate(math.radians(Angle_cross), ref_face.normal, intersection_pt)
-        elif 89.9 < int(StrutInclination) < 90.1:
-            self.sj_main_sub_volume0 = Brep.from_box(self.cross_beam.blank)
-            self.sj_main_sub_volume0.rotate(math.radians(angle_90deg), ref_face.normal, intersection_pt2)
-            self.sj_main_sub_volume1 = Brep.from_box(self.cross_beam.blank)
-            self.sj_main_sub_volume1.rotate(math.radians(-angle_90deg), ref_face.normal, intersection_pt)
-        else:
-            self.sj_main_sub_volume0 = Brep.from_box(self.cross_beam.blank)
-            self.sj_main_sub_volume0.rotate(math.radians(Angle_cross), ref_face.normal, intersection_pt2)
-            self.sj_main_sub_volume1 = Brep.from_box(self.cross_beam.blank)
-            self.sj_main_sub_volume1.rotate(math.radians(180+Angle_cross+LeadAngle), ref_face.normal, intersection_pt)
-
-
         #brep for cross beam sub volume
         pts_ph = [worldxy_xypoint, intersection_pt, intersection_pt2]
         vertices_ph_sj_cross = pts_ph
         vertices_ph_sj_cross.extend([pt.translated(-ref_face.normal*60) for pt in pts_ph])
-        if (inter_param > 0.5 and StrutInclination < 90) or (inter_param < 0.5 and StrutInclination > 90):
+        if 89.9 <= StrutInclination <= 90.1:
+            self.ph_sj_cross = Polyhedron(vertices_ph_sj_cross, [[0, 2, 1], [3, 4, 5], [0, 1, 4, 3], [1, 2, 5, 4], [0, 3, 5, 2]])
+        elif (inter_param > 0.50000001 and StrutInclination < 89.9) or (inter_param < 0.4999999 and StrutInclination > 90.1):
             self.ph_sj_cross = Polyhedron(vertices_ph_sj_cross, [[0, 1, 2], [3, 5, 4], [0, 3, 4, 1], [1, 4, 5, 2], [0, 2, 5, 3]])
         else:
             self.ph_sj_cross = Polyhedron(vertices_ph_sj_cross, [[0, 2, 1], [3, 4, 5], [0, 1, 4, 3], [1, 2, 5, 4], [0, 3, 5, 2]])
         self.brep_sj_cross = Brep.from_mesh(self.ph_sj_cross)
+
+
+        vec_inter_pt = Vector.from_start_end(worldxy_xypoint, intersection_pt)
+        vec_inter_pt2 = Vector.from_start_end(worldxy_xypoint, intersection_pt2)
+        vec_edge = Vector.from_start_end(worldxy_xypoint, vertices_ph_sj_cross[3])
+
+
+        self.cutting_frame0 = Frame(worldxy_xypoint, vec_edge, vec_inter_pt)
+        self.cutting_frame1 = Frame(worldxy_xypoint, vec_edge, vec_inter_pt2)
+
+
+        #brep for main beam sub volume
+        if 89.9 <= StrutInclination <= 90.1:
+            print(1)
+            self.sj_main_sub_volume0 = Brep.from_box(self.main_beam.blank)
+            s0 = Scale.from_factors([1.5, 1.5, 1.5], Frame(intersection_pt, ref_face.xaxis, ref_face.yaxis))
+            # self.sj_main_sub_volume0.transform(s0)
+            self.sj_main_sub_volume0.rotate(math.radians((90+angle_90deg)), ref_face.normal, intersection_pt2)
+            self.sj_main_sub_volume1 = Brep.from_box(self.main_beam.blank)
+            # s = Scale.from_factors([10.0, 10.0, 10.0], Frame(intersection_pt, ref_face.xaxis, ref_face.yaxis))
+            # self.sj_main_sub_volume1.transform(s)
+            self.sj_main_sub_volume1.rotate(math.radians(-(90+angle_90deg)), ref_face.normal, intersection_pt)
+        elif (inter_param > 0.5000001 and StrutInclination < 89.9) or (inter_param < 0.4999999 and StrutInclination > 90.1):
+            print(2)
+            self.sj_main_sub_volume0 = Brep.from_box(self.main_beam.blank)
+            # self.sj_main_sub_volume0.rotate(math.radians(180+Angle_cross+LeadAngle), ref_face.normal, intersection_pt2)
+            self.sj_main_sub_volume0.rotate(math.radians(StrutInclination+Angle_cross+LeadAngle), ref_face.normal, intersection_pt2)
+            self.sj_main_sub_volume1 = Brep.from_box(self.main_beam.blank)
+            self.sj_main_sub_volume1.rotate(math.radians(180-Angle_cross), ref_face.normal, intersection_pt)
+        else:
+            print(3)
+            self.sj_main_sub_volume0 = Brep.from_box(self.cross_beam.blank)
+            self.sj_main_sub_volume0.rotate(math.radians(Angle_cross), ref_face.normal, intersection_pt2)
+            self.sj_main_sub_volume1 = Brep.from_box(self.cross_beam.blank)
+            self.sj_main_sub_volume1.rotate(math.radians(180+Angle_cross+LeadAngle), ref_face.normal, intersection_pt)
 
 
         return True

@@ -69,6 +69,7 @@ class TButtJoint(ButtJoint):
         cutting_plane = None
         try:
             cutting_plane = self.get_main_cutting_plane()[0]
+            # print(cutting_plane)
         except AttributeError as ae:
             raise BeamJoinningError(beams=self.beams, joint=self, debug_info=str(ae), debug_geometries=[cutting_plane])
         except Exception as ex:
@@ -76,10 +77,15 @@ class TButtJoint(ButtJoint):
         self.check_joint_boolean()
         if self.stepjoint:
             if self.calc_params_stepjoint():
-                self.main_beam.add_features(BrepSubtraction(self.sj_main_sub_volume0))
-                self.features.append(BrepSubtraction(self.sj_main_sub_volume0))
-                self.main_beam.add_features(BrepSubtraction(self.sj_main_sub_volume1))
-                self.features.append(BrepSubtraction(self.sj_main_sub_volume1))
+                # self.main_beam.add_features(BrepSubtraction(self.sj_main_sub_volume0))
+                # self.features.append(BrepSubtraction(self.sj_main_sub_volume0))
+                # self.main_beam.add_features(BrepSubtraction(self.sj_main_sub_volume1))
+                # self.features.append(BrepSubtraction(self.sj_main_sub_volume1))
+                # print(self.cutting_frame0)
+                self.main_beam.add_features(CutFeature(self.cutting_frame0))
+                self.features.append(self.cutting_frame0)
+                # self.main_beam.add_features(CutFeature(self.cutting_frame1))
+                # self.features.append(self.cutting_frame1)
                 self.cross_beam.add_features(BrepSubtraction(self.brep_sj_cross))
                 self.features.append(BrepSubtraction(self.brep_sj_cross))
         else:
