@@ -8,6 +8,8 @@ from .geometry import MillVolume
 from .geometry import MillVolumeGeometry
 from .geometry import DrillFeature
 from .geometry import DrillFeatureGeometry
+from .geometry import BrepSubtraction
+from .geometry import BrepSubtractionGeometry
 
 
 __all__ = [
@@ -21,4 +23,6 @@ __all__ = [
     "MillVolumeGeometry",
     "DrillFeature",
     "DrillFeatureGeometry",
+    "BrepSubtraction",
+    "BrepSubtractionGeometry",
 ]
