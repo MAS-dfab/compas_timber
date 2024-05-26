@@ -2,8 +2,6 @@ from compas_timber.connections import FrenchRidgeLapJoint
 from compas_timber.fabrication import BTLx
 from compas_timber.fabrication import BTLxFrenchRidgeLap
 
-from compas.geometry import cross_vectors, dot_vectors
-
 
 class FrenchRidgeFactory(object):
     """
@@ -33,8 +31,8 @@ class FrenchRidgeFactory(object):
         main_part = parts[str(joint.main_beam.key)]
         cross_part = parts[str(joint.cross_beam.key)]
 
-        main_part.processings.append(BTLxFrenchRidgeLap.create_process(main_part, joint, drill=True, joint_name="FrenchRidgeLap"))
-        cross_part.processings.append(BTLxFrenchRidgeLap.create_process(cross_part, joint, drill=False, joint_name="FrenchRidgeLap"))
+        main_part.processings.append(BTLxFrenchRidgeLap.create_process(joint.btlx_params_main, joint_name="FrenchRidgeLap"))
+        cross_part.processings.append(BTLxFrenchRidgeLap.create_process(joint.btlx_params_cross, joint_name="FrenchRidgeLap"))
 
 
 BTLx.register_joint(FrenchRidgeLapJoint, FrenchRidgeFactory)

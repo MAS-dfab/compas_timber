@@ -4,6 +4,7 @@ from compas.geometry import Frame
 from compas.geometry import angle_vectors
 from compas.geometry import cross_vectors
 from compas.geometry import dot_vectors
+from compas.geometry import angle_vectors_signed
 
 from .joint import BeamJoinningError
 from .joint import Joint
@@ -49,6 +50,8 @@ class FrenchRidgeLapJoint(Joint):
         self.drill_diameter = float(drill_diameter)
 
         self.reference_face_indices = {}
+        self.btlx_params_main = {}
+        self.btlx_params_cross = {}
 
     @property
     def __data__(self):
@@ -67,6 +70,27 @@ class FrenchRidgeLapJoint(Joint):
         instance.cross_beam_key = value["cross_beam_key"]
         instance.drill_diameter = value["drill_diameter"]
         return instance
+
+    @property
+    def angle(self):
+        return self.angle_rad * 180 / math.pi
+
+    @property
+    def ref_edge(self):
+        if self._ref_edge:
+            return "refedge"
+        else:
+            return "oppedge"
+
+    @property
+    def drill_hole(self):
+        if self._drill_hole:
+            return "yes"
+        else:
+            return "no"
+
+
+
 
     @property
     def beams(self):
@@ -160,5 +184,39 @@ class FrenchRidgeLapJoint(Joint):
             )
         self.reference_face_indices = {str(self.main_beam.key): 4, str(self.cross_beam.key): 2}
 
+    def calc_params_main(self):
+        """
+        This is an internal method to generate process parameters
+        """
+
+        main_vector = self.main_beam.frame.xaxis
+        if self.ends[str(self.main_beam.key)] == "end":
+            main_vector = -main_vector
+
+        angle_rad = angle_vectors_signed(self.ref_face.xaxis, main_vector, self.ref_face.normal)
+        angle_lines = angle_vectors(self.ref_face.xaxis, main_vector)
+
+        if self.orientation == "start":
+            if angle_rad < 0:
+                self._ref_edge = False
+                self.angle_rad = abs(self.angle_rad)
+        #self.orientation = joint.ends[str(part.key)]
+            self.startX = abs(self.beam.width / math.tan(self.angle_rad))
+            if self.angle_lines < math.pi / 2:
+                self.startX = 0.0
+
+        else:
+            if self.angle_rad < 0:
+                self.angle_rad = abs(self.angle_rad)
+                self._ref_edge = False
+
+            self.angle_rad = math.pi - self.angle_rad
+            self.startX = abs(self.beam.width / math.tan(self.angle_rad))
+
+        if self.orientation == "end":
+            if self._ref_edge:
+                start_X = self.beam.blank_length - start_X
+            else:
+                start_X = self.beam.blank_length + start_X
 
 

@@ -1,8 +1,4 @@
-import math
 from collections import OrderedDict
-
-from compas.geometry import angle_vectors_signed, angle_vectors
-
 from compas_timber.fabrication import BTLx
 from compas_timber.fabrication import BTLxProcess
 
@@ -51,121 +47,61 @@ class BTLxFrenchRidgeLap(object):
 
     PROCESS_TYPE = "FrenchRidgeLap"
 
-    def __init__(self, part, joint, drill=False, joint_name=None):
-        for beam in joint.beams:
-            if beam.key == part.key:
-                self.beam = beam
-            else:
-                self.other_beam = beam
-        self.part = part
-        self.joint = joint
-        self.drill = drill
-        self.orientation = joint.ends[str(part.key)]
-        self._ref_edge = True
+    def __init__(self, param_dict, joint_name=None, **kwargs):
+        self.apply_process = True
+        self.reference_plane_id = param_dict["ReferencePlaneID"]
+        self.orientation = param_dict["Orientation"]
+        self.start_x = param_dict["StartX"]
+        self.angle = param_dict["Angle"]
+        self.ref_edge = param_dict["RefPosition"]
+        self.drill_hole = param_dict["Drillhole"]
+        self.drill_hole_diameter = param_dict["DrillholeDiam"]
 
-        self._drill_hole = True if joint.drill_diameter > 0 and self.drill==True else False
-        self.drill_hole_diameter = float(joint.drill_diameter)
+        for key, value in param_dict.items():
+            setattr(self, key, value)
 
-        self.ref_face_index = self.joint.reference_face_indices[str(self.beam.key)]
-        self.ref_face = self.part.reference_surface_planes(str(self.ref_face_index))
+        for key, value in kwargs.items():
+            setattr(self, key, value)
 
         if joint_name:
             self.name = joint_name
         else:
             self.name = "french_ridge_lap"
 
+    @property
+    def header_attributes(self):
+        """the following attributes are required for all processes, but the keys and values of header_attributes are process specific."""
 
-        """
-        the following attributes are required for all processes, but the keys and values of header_attributes are process specific.
-        """
-
-        self.header_attributes = {
-            "Name": "French ridge lap",
+        return {
+            "Name": self.name,
             "Process": "yes",
             "Priority": "0",
             "ProcessID": "0",
-            "ReferencePlaneID": str(self.ref_face_index),
-        }  # XML attributes of the process element in the BTLx file
-
-        self.process_joints()
+            "ReferencePlaneID": str(self.reference_plane_id),
+        }
 
     @property
-    def angle(self):
-        return self.angle_rad * 180 / math.pi
+    def process_params(self):
+        """This property is required for all process types. It returns a dict with the geometric parameters to fabricate the joint."""
 
-    @property
-    def ref_edge(self):
-        if self._ref_edge:
-            return "refedge"
+        if self.apply_process:
+            """the following attributes are specific to FrenchRidgeLap"""
+            od = OrderedDict(
+                [
+                    ("Orientation", str(self.orientation)),
+                    ("StartX", "{:.{prec}f}".format(self.start_x, prec=BTLx.POINT_PRECISION)),
+                    ("Angle", "{:.{prec}f}".format(self.angle, prec=BTLx.ANGLE_PRECISION)),
+                    ("RefPosition", self.ref_edge),
+                    ("Drillhole", self.drill_hole),
+                    ("DrillholeDiam", "{:.{prec}f}".format(self.drill_hole_diameter, prec=BTLx.POINT_PRECISION)),
+                ]
+            )
+            return od
         else:
-            return "oppedge"
-
-    @property
-    def drill_hole(self):
-        if self._drill_hole:
-            return "yes"
-        else:
-            return "no"
-
-    def process_joints(self):
-        """
-        This property is required for all process types. It returns a dict with the geometric parameters to fabricate the joint. Use OrderedDict to maintain original order
-        """
-        self.get_params()
-
-        self.process_parameters = OrderedDict(
-            [
-                ("Orientation", str(self.orientation)),
-                ("StartX", "{:.{prec}f}".format(self.startX, prec=BTLx.POINT_PRECISION)),
-                ("Angle", "{:.{prec}f}".format(self.angle, prec=BTLx.POINT_PRECISION)),
-                ("RefPosition", self.ref_edge),
-                ("Drillhole", self.drill_hole),
-                ("DrillholeDiam", "{:.{prec}f}".format(self.drill_hole_diameter, prec=BTLx.POINT_PRECISION)),
-            ]
-        )
-
-    def get_params(self):
-        """
-        This is an internal method to generate process parameters
-        """
-
-        other_vector = self.other_beam.frame.xaxis
-        if self.joint.ends[str(self.other_beam.key)] == "end":
-            other_vector = -other_vector
-
-        self.angle_rad = angle_vectors_signed(self.ref_face.xaxis, other_vector, self.ref_face.normal)
-        self.angle_lines = angle_vectors(self.ref_face.xaxis, other_vector)
-
-        if self.orientation == "start":
-            # if self.angle_rad < math.pi / 3 and self.angle_rad > -math.pi / 2:
-            #     raise Exception("french ridge lap joint beams must join at 90-180 degrees")
-            if self.angle_rad < 0:
-                self._ref_edge = False
-                self.angle_rad = abs(self.angle_rad)
-
-            self.startX = abs(self.beam.width / math.tan(self.angle_rad))
-            if self.angle_lines < math.pi / 2:
-                self.startX = 0.0
-
-        else:
-            # if self.angle_rad < -math.pi / 2 or self.angle_rad > math.pi / 2:
-            #     raise Exception("french ridge lap joint beams must join at 90-180 degrees")
-            if self.angle_rad < 0:
-                self.angle_rad = abs(self.angle_rad)
-                self._ref_edge = False
-
-            self.angle_rad = math.pi - self.angle_rad
-            self.startX = abs(self.beam.width / math.tan(self.angle_rad))
-
-        if self.orientation == "end":
-            if self._ref_edge:
-                self.startX = self.beam.blank_length - self.startX
-            else:
-                self.startX = self.beam.blank_length + self.startX
+            return None
 
     @classmethod
-    def create_process(cls, part, joint, drill, joint_name = None):
-        frl_process = BTLxFrenchRidgeLap(part, joint, drill, joint_name)
-        return BTLxProcess(
-            BTLxFrenchRidgeLap.PROCESS_TYPE, frl_process.header_attributes, frl_process.process_parameters
-        )
+    def create_process(cls, param_dict, joint_name=None, **kwargs):
+        """Creates a french-ridge lap process from a dictionary of parameters."""
+        frenh_ridge_lap = BTLxFrenchRidgeLap(param_dict, joint_name, **kwargs)
+        return BTLxProcess(BTLxFrenchRidgeLap.PROCESS_TYPE, frenh_ridge_lap.header_attributes, frenh_ridge_lap.process_params)
