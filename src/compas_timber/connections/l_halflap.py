@@ -154,7 +154,7 @@ class LHalfLapJoint(LapJoint):
 
         self.features = [main_volume, cross_volume, f_main, f_cross]
 
-    def get_world_top_bottom_faces(self, beam):
+    def get_world_top_bottom_faces(self, beam): #TODO: needs to be referenced to the beam coordinate system
         faces = beam.faces
         face_normals = [face.zaxis for face in faces]
         angles = [angle_vectors(face_normal, [0, 0, 1]) for face_normal in face_normals]

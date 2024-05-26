@@ -434,41 +434,22 @@ class ButtJoint(Joint):
         inclination = projected_vec.angle(center_line_vec, True)
 
         offset_from_edge = self.drill_diameter*4
-
-
         #####condition for doing vertical drilling
         if inclination == 0:
             Inclination = 90.0
-        elif inclination < 30:
+        elif inclination < 45:
             start_displacement = (self.cross_beam.width/2) / math.sin(math.radians(inclination)) - offset_from_edge
             if dot_vectors(self.main_beam.centerline.direction, self.cross_beam.centerline.direction)>0:
-                start_displacement = -start_displacement
-            else:
                 start_displacement = start_displacement
+            else:
+                start_displacement = -start_displacement
             vector = -cutting_frame.xaxis
             Inclination = 90.0
             StartX = StartX - start_displacement
             start_point.translate(vector*start_displacement)
-            line_point = start_point.translated([0,0,1])
+            line_point = start_point.translated(cutting_frame.normal*100)
         else:
             Inclination = inclination
-
-        # #####condition for doing horizontal drilling
-        # if Angle == 0:
-        #     Angle = 90.0
-
-        # elif Angle < 30:
-        #     start_displacement = (self.cross_beam.width/2) / math.sin(math.radians(Angle)) - offset_from_edge
-        #     if dot_vectors(self.main_beam.centerline.direction, self.cross_beam.centerline.direction)>0:
-        #         start_displacement = -start_displacement
-        #     else:
-        #         start_displacement = start_displacement
-        #     vector = -cutting_frame.yaxis
-        #     Angle = 90.0
-        #     StartY = StartY - start_displacement
-        #     start_point.translate(vector*start_displacement)
-        #     line_point = start_point.translated([0,0,1])
-
 
         self.btlx_drilling_params_cross = {
             "ReferencePlaneID": cross_face_index,
