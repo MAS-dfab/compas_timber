@@ -37,7 +37,7 @@ class LHalfLapFactory(object):
         main_part.processings.append(BTLxLap.create_process(joint.btlx_params_main, "L-HalfLap Joint {0}".format(joint.key)))
 
         if joint.drill_diameter > 0:
-            main_part.processings.append(BTLxDrilling.create_process(joint.btlx_drilling_params_main, "L-HalfLap Joint {0}".format(joint.key)))
+            main_part.processings.append(BTLxDrilling.create_process(joint.btlx_drilling_params_main, "L-HalfLap Drilling {0}".format(joint.key)))
 
 
 BTLx.register_joint(LHalfLapJoint, LHalfLapFactory)

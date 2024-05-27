@@ -45,23 +45,11 @@ class TButtJoint(ButtJoint):
         This method is automatically called when joint is created by the call to `Joint.create()`.
 
         """
+
+        #######IF STEPJOINT --> NO EXTENSION#########
         assert self.main_beam and self.cross_beam
         extension_tolerance = 0.01  # TODO: this should be proportional to the unit used
-        if self.birdsmouth:
-            extension_plane_main = self.get_face_most_towards_beam(self.main_beam, self.cross_beam, ignore_ends=True)[1]
-        else:
-            extension_plane_main = self.get_face_most_ortho_to_beam(self.main_beam, self.cross_beam, ignore_ends=True)[1]
-        start_main, end_main = self.main_beam.extension_to_plane(extension_plane_main)
-        self.main_beam.add_blank_extension(start_main + extension_tolerance, end_main + extension_tolerance, self.key)
-
-    def add_extensions(self):
-        """Adds the extensions to the main beam and cross beam.
-
-        This method is automatically called when joint is created by the call to `Joint.create()`.
-
-        """
-        assert self.main_beam and self.cross_beam
-        extension_tolerance = 0.01  # TODO: this should be proportional to the unit used
+        self.check_joint_boolean()
         if self.birdsmouth:
             extension_plane_main = self.get_face_most_towards_beam(self.main_beam, self.cross_beam, ignore_ends=True)[1]
         else:
@@ -79,13 +67,13 @@ class TButtJoint(ButtJoint):
         if self.features:
             self.main_beam.remove_features(self.features)
         cutting_plane = None
+        # self.add_extensions()
         try:
             cutting_plane = self.get_main_cutting_plane()[0]
         except AttributeError as ae:
             raise BeamJoinningError(beams=self.beams, joint=self, debug_info=str(ae), debug_geometries=[cutting_plane])
         except Exception as ex:
             raise BeamJoinningError(beams=self.beams, joint=self, debug_info=str(ex))
-
         if self.stepjoint:
             if self.calc_params_stepjoint():
                 self.main_beam.add_features(BrepSubtraction(self.sj_main_sub_volume0))
@@ -94,19 +82,21 @@ class TButtJoint(ButtJoint):
                 self.features.append(BrepSubtraction(self.sj_main_sub_volume1))
                 self.cross_beam.add_features(BrepSubtraction(self.brep_sj_cross))
                 self.features.append(BrepSubtraction(self.brep_sj_cross))
-        if self.mill_depth > 0:
-            self.cross_beam.add_features(MillVolume(self.subtraction_volume()))
-            self.features.append(MillVolume(self.subtraction_volume()))
-        do_jack = False
-        if self.birdsmouth:
-            if self.calc_params_birdsmouth():
-                self.main_beam.add_features(BrepSubtraction(self.bm_sub_volume))
-                self.features.append(BrepSubtraction(self.bm_sub_volume))
+        else:
+            if self.mill_depth > 0:
+                self.cross_beam.add_features(MillVolume(self.subtraction_volume()))
+                self.features.append(MillVolume(self.subtraction_volume()))
+            if self.birdsmouth:
+                if self.calc_params_birdsmouth():
+                    self.main_beam.add_features(BrepSubtraction(self.bm_sub_volume))
+                    self.features.append(BrepSubtraction(self.bm_sub_volume))
+                else:
+                    self.birdsmouth = False
+                    self.main_beam.add_features(CutFeature(cutting_plane))
+                    self.features.append(cutting_plane)
             else:
-                do_jack = True
-        if do_jack:
-            self.main_beam.add_features(CutFeature(cutting_plane))
-            self.features.append(cutting_plane)
+                self.main_beam.add_features(CutFeature(cutting_plane))
+                self.features.append(cutting_plane)
         if self.drill_diameter > 0:
             self.cross_beam.add_features(DrillFeature(*self.calc_params_drilling()))
             self.features.append(DrillFeature(*self.calc_params_drilling()))

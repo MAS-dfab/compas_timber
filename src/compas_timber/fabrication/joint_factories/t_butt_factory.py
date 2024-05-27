@@ -34,24 +34,22 @@ class TButtFactory(object):
         cross_part = parts[str(joint.cross_beam.key)]
         cut_plane, ref_plane = joint.get_main_cutting_plane()
 
-        if joint.birdsmouth:
-            ref_face = main_part.beam.faces[joint.main_face_index]
-            joint.btlx_params_main["ReferencePlaneID"] = str(main_part.reference_surface_from_beam_face(ref_face))
-            main_part.processings.append(BTLxDoubleCut.create_process(joint.btlx_params_main, "T-Butt Joint {0}".format(joint.key)))
-        elif joint.stepjoint:
+        if joint.stepjoint:
             ref_face = main_part.beam.faces[joint.ref_face_id]
             joint.btlx_params_stepjoint_main["ReferencePlaneID"] = str(main_part.reference_surface_from_beam_face(ref_face))
             main_part.processings.append(BTLxDoubleCut.create_process(joint.btlx_params_stepjoint_main, "T-Butt Joint {0}".format(joint.key)))
             ref_face_cross = cross_part.beam.faces[joint.cross_face_id]
             joint.btlx_params_stepjoint_cross["ReferencePlaneID"] = str(cross_part.reference_surface_from_beam_face(ref_face_cross))
             cross_part.processings.append(BTLxLap.create_process(joint.btlx_params_stepjoint_cross, "T-Butt Joint pocket {0}".format(joint.key)))
+        elif joint.birdsmouth:
+            ref_face = main_part.beam.faces[joint.main_face_index]
+            joint.btlx_params_main["ReferencePlaneID"] = str(main_part.reference_surface_from_beam_face(ref_face))
+            main_part.processings.append(BTLxDoubleCut.create_process(joint.btlx_params_main, "T-Butt Joint"))
         else:
             main_part.processings.append(BTLxJackCut.create_process(main_part, cut_plane, "T-Butt Joint {0}".format(joint.key)))
 
         joint.btlx_params_cross["reference_plane_id"] = str(cross_part.reference_surface_from_beam_face(ref_plane))
         if joint.mill_depth > 0:
-            if joint.btlx_params_cross["length"] <= 61:
-                joint.btlx_params_cross["length"] = 61.5
             joint.btlx_params_cross["machining_limits"] = {"FaceLimitedFront": "no", "FaceLimitedBack": "no"}
             joint.btlx_params_cross["ReferencePlaneID"] = str(cross_part.reference_surface_from_beam_face(ref_plane))
             cross_part.processings.append(BTLxLap.create_process(joint.btlx_params_cross, "T-Butt Joint {0}".format(joint.key)))

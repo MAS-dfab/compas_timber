@@ -191,7 +191,7 @@ class BTLxPart(object):
             beam.frame.yaxis,
         )  # I used long_edge[2] because it is in Y and Z negative. Using that as reference puts the beam entirely in positive coordinates.
         self.blank_length = beam.blank_length
-        self.ID = beam.attributes["ID"]
+        self.ID = beam.attributes["ID"]+str(beam.key)
         self.intersections = beam.intersections
         self._reference_surfaces = []
         self.processings = []
