@@ -53,6 +53,8 @@ class FrenchRidgeLapJoint(Joint):
         self.btlx_params_main = {}
         self.btlx_params_cross = {}
 
+        self.flip_lap() ### assure that laps are faceing the same direction on both ends
+
     @property
     def __data__(self):
         data_dict = {
@@ -184,7 +186,7 @@ class FrenchRidgeLapJoint(Joint):
             )
         self.reference_face_indices = {str(self.main_beam.key): 4, str(self.cross_beam.key): 2}
 
-    def calc_params_main(self):
+    def btlx_params_main(self):
         """
         This is an internal method to generate process parameters
         """
@@ -219,4 +221,37 @@ class FrenchRidgeLapJoint(Joint):
             else:
                 start_X = self.beam.blank_length + start_X
 
+    def btlx_params_cross(self):
+        """
+        This is an internal method to generate process parameters
+        """
 
+        main_vector = self.cross_beam.frame.xaxis
+        if self.ends[str(self.cross_beam.key)] == "end":
+            main_vector = -main_vector
+
+        angle_rad = angle_vectors_signed(self.ref_face.xaxis, main_vector, self.ref_face.normal)
+        angle_lines = angle_vectors(self.ref_face.xaxis, main_vector)
+
+        if self.orientation == "start":
+            if angle_rad < 0:
+                self._ref_edge = False
+                self.angle_rad = abs(self.angle_rad)
+        #self.orientation = joint.ends[str(part.key)]
+            self.startX = abs(self.beam.width / math.tan(self.angle_rad))
+            if self.angle_lines < math.pi / 2:
+                self.startX = 0.0
+
+        else:
+            if self.angle_rad < 0:
+                self.angle_rad = abs(self.angle_rad)
+                self._ref_edge = False
+
+            self.angle_rad = math.pi - self.angle_rad
+            self.startX = abs(self.beam.width / math.tan(self.angle_rad))
+
+        if self.orientation == "end":
+            if self._ref_edge:
+                start_X = self.beam.blank_length - start_X
+            else:
+                start_X = self.beam.blank_length + start_X
