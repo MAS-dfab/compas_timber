@@ -56,6 +56,7 @@ class BTLx(object):
         self.parts = {}
         self._test = []
         self.joints = assembly.joints
+        self.existing_intervals = []
         self.process_assembly()
 
     @property
@@ -79,7 +80,6 @@ class BTLx(object):
         self.ET_element.append(self.file_history)
         self.project_element = ET.SubElement(self.ET_element, "Project", Name="testProject")
         self.parts_element = ET.SubElement(self.project_element, "Parts")
-
         for part in self.parts.values():
             self.parts_element.append(part.et_element)
         return MD.parseString(ET.tostring(self.ET_element)).toprettyxml(indent="   ")
@@ -95,6 +95,9 @@ class BTLx(object):
             if part.ID:
                 factory_type = self.REGISTERED_FEATURES.get("TextID")
                 factory_type.apply_processings(part)
+            factory_type = self.REGISTERED_FEATURES.get("MarkerFactory")
+            self.existing_intervals.append(factory_type.apply_processings(part, self.existing_intervals))
+
 
     @classmethod
     def register_joint(cls, joint_type, joint_factory):
