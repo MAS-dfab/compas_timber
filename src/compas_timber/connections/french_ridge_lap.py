@@ -49,6 +49,7 @@ class FrenchRidgeLapJoint(Joint):
         self.drill_diameter = float(drill_diameter)
 
         self.reference_face_indices = {}
+        self.flip_lap()
 
     @property
     def __data__(self):
@@ -87,7 +88,7 @@ class FrenchRidgeLapJoint(Joint):
         bottom_dot = abs(dot_vectors(bottom_vect, default_axis))
 
         # Determine which part is more parallel to the default axis and flip if necessary
-        if top_dot > bottom_dot:
+        if top_dot < bottom_dot:
             self.main_beam, self.cross_beam = self.cross_beam, self.main_beam
             self.main_beam_key, self.cross_beam_key = self.cross_beam_key, self.main_beam_key
         return top_dot < bottom_dot
