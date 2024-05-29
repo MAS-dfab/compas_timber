@@ -80,7 +80,6 @@ class TStepJoint(Joint):
         data_dict = {
             "main_beam_key": self.main_beam_key,
             "cross_beam_key": self.cross_beam_key,
-            "mill_depth": self.mill_depth,
         }
         data_dict.update(super(TStepJoint, self).__data__)
         return data_dict
@@ -432,7 +431,7 @@ class TStepJoint(Joint):
         #brep for cross beam sub volume
         pts_ph = [worldxy_xypoint, intersection_pt, intersection_pt2]
         vertices_ph_sj_cross = pts_ph
-        vertices_ph_sj_cross.extend([pt.translated(-ref_face.normal*60) for pt in pts_ph])
+        vertices_ph_sj_cross.extend([pt.translated(-ref_face.normal*self.cross_beam.width) for pt in pts_ph])
         if 89.9 <= StrutInclination <= 90.1:
             self.ph_sj_cross = Polyhedron(vertices_ph_sj_cross, [[0, 2, 1], [3, 4, 5], [0, 1, 4, 3], [1, 2, 5, 4], [0, 3, 5, 2]])
         elif (inter_param > 0.50000001 and StrutInclination < 89.9) or (inter_param < 0.4999999 and StrutInclination > 90.1):
