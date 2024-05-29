@@ -449,43 +449,87 @@ class TStepJoint(Joint):
         vertices_ph_sj_cross.extend([pt.translated(-ref_face.normal*60) for pt in pts_ph])
         if 89.9 <= StrutInclination <= 90.1:
             self.ph_sj_cross = Polyhedron(vertices_ph_sj_cross, [[0, 2, 1], [3, 4, 5], [0, 1, 4, 3], [1, 2, 5, 4], [0, 3, 5, 2]])
-        elif (inter_param > 0.50000001 and StrutInclination < 89.9) or (inter_param < 0.4999999 and StrutInclination > 90.1):
-            self.ph_sj_cross = Polyhedron(vertices_ph_sj_cross, [[0, 1, 2], [3, 5, 4], [0, 3, 4, 1], [1, 4, 5, 2], [0, 2, 5, 3]])
-        else:
+        elif StrutInclination < 89.9:
             self.ph_sj_cross = Polyhedron(vertices_ph_sj_cross, [[0, 2, 1], [3, 4, 5], [0, 1, 4, 3], [1, 2, 5, 4], [0, 3, 5, 2]])
+        else:
+            self.ph_sj_cross = Polyhedron(vertices_ph_sj_cross, [[0, 1, 2], [3, 5, 4], [0, 3, 4, 1], [1, 4, 5, 2], [0, 2, 5, 3]])
+        # print(self.ph_sj_cross)
         self.brep_sj_cross = Brep.from_mesh(self.ph_sj_cross)
+        # print(self.brep_sj_cross)
 
 
         vec_inter_pt = Vector.from_start_end(worldxy_xypoint, intersection_pt)
         vec_inter_pt2 = Vector.from_start_end(worldxy_xypoint, intersection_pt2)
         vec_edge = Vector.from_start_end(worldxy_xypoint, vertices_ph_sj_cross[3])
 
+        main_cutting_face = self.get_main_cutting_plane()
+        self.test = main_cutting_face[0]
 
-        self.cutting_frame0 = Frame(worldxy_xypoint, vec_edge, vec_inter_pt)
+
+        self.cutting_frame0 = Frame(worldxy_xypoint, vec_inter_pt, vec_edge)
+        # print(self.cutting_frame0.normal.dot(main_cutting_face[0].normal))
+        if self.cutting_frame0.normal.dot(main_cutting_face[0].normal) < 0:
+            self.cutting_frame0 = Frame(worldxy_xypoint, vec_edge, vec_inter_pt)
         self.cutting_frame1 = Frame(worldxy_xypoint, vec_edge, vec_inter_pt2)
+        # print(self.cutting_frame1.normal.dot(main_cutting_face[0].normal))
+        if self.cutting_frame1.normal.dot(main_cutting_face[0].normal) < 0:
+            self.cutting_frame1 = Frame(worldxy_xypoint, vec_inter_pt2, vec_edge)
+        self.test = self.cutting_frame1
+
+
+
+        # print(SI_angle)
+        # if 89.9 <= SI_angle <= 90.1:
+        #     print("90=")
+        #     self.cutting_frame0 = Frame(worldxy_xypoint, vec_inter_pt, vec_edge)
+        #     self.cutting_frame1 = Frame(worldxy_xypoint, vec_edge, vec_inter_pt2)
+        # elif SI_angle < 89.9:
+        #     print("90-")
+        #     self.cutting_frame0 = Frame(worldxy_xypoint, vec_inter_pt, vec_edge)
+        #     self.cutting_frame1 = Frame(worldxy_xypoint, vec_edge, vec_inter_pt2)
+        # else:
+        #     print("90+")
+        #     self.cutting_frame0 = Frame(worldxy_xypoint, vec_edge, vec_inter_pt)
+        #     self.cutting_frame1 = Frame(worldxy_xypoint, vec_inter_pt2, vec_edge)
+
+        # print("cutting_frame0", self.cutting_frame0)
+        # print("cutting_frame1", self.cutting_frame1)
 
 
         #brep for main beam sub volume
-        if 89.9 <= StrutInclination <= 90.1:
-            self.sj_main_sub_volume0 = Brep.from_box(self.main_beam.blank)
-            s0 = Scale.from_factors([1.5, 1.5, 1.5], Frame(intersection_pt, ref_face.xaxis, ref_face.yaxis))
-            # self.sj_main_sub_volume0.transform(s0)
-            self.sj_main_sub_volume0.rotate(math.radians((90+angle_90deg)), ref_face.normal, intersection_pt2)
-            self.sj_main_sub_volume1 = Brep.from_box(self.main_beam.blank)
-            # s = Scale.from_factors([10.0, 10.0, 10.0], Frame(intersection_pt, ref_face.xaxis, ref_face.yaxis))
-            # self.sj_main_sub_volume1.transform(s)
-            self.sj_main_sub_volume1.rotate(math.radians(-(90+angle_90deg)), ref_face.normal, intersection_pt)
-        elif (inter_param > 0.5000001 and StrutInclination < 89.9) or (inter_param < 0.4999999 and StrutInclination > 90.1):
-            self.sj_main_sub_volume0 = Brep.from_box(self.main_beam.blank)
-            # self.sj_main_sub_volume0.rotate(math.radians(180+Angle_cross+LeadAngle), ref_face.normal, intersection_pt2)
-            self.sj_main_sub_volume0.rotate(math.radians(StrutInclination+Angle_cross+LeadAngle), ref_face.normal, intersection_pt2)
-            self.sj_main_sub_volume1 = Brep.from_box(self.main_beam.blank)
-            self.sj_main_sub_volume1.rotate(math.radians(180-Angle_cross), ref_face.normal, intersection_pt)
-        else:
-            self.sj_main_sub_volume0 = Brep.from_box(self.cross_beam.blank)
-            self.sj_main_sub_volume0.rotate(math.radians(Angle_cross), ref_face.normal, intersection_pt2)
-            self.sj_main_sub_volume1 = Brep.from_box(self.cross_beam.blank)
-            self.sj_main_sub_volume1.rotate(math.radians(180+Angle_cross+LeadAngle), ref_face.normal, intersection_pt)
+        s0 = Scale.from_factors([2, 2, 2], Frame(intersection_pt2, ref_face.xaxis, ref_face.yaxis))
+        s1 = Scale.from_factors([2, 2, 2], Frame(intersection_pt, ref_face.xaxis, ref_face.yaxis))
+        # if 89.9 <= StrutInclination <= 90.1:
+        #     print("90=")
+        #     self.sj_main_sub_volume0 = Brep.from_box(self.main_beam.blank)
+        #     self.sj_main_sub_volume0.transform(s0)
+        #     self.sj_main_sub_volume0.translate(ref_face.normal*(self.main_beam.width/2))
+        #     self.sj_main_sub_volume0.rotate(math.radians((90+angle_90deg)), ref_face.normal, intersection_pt2)
+        #     self.sj_main_sub_volume1 = Brep.from_box(self.main_beam.blank)
+        #     self.sj_main_sub_volume1.transform(s1)
+        #     self.sj_main_sub_volume1.translate(ref_face.normal*(self.main_beam.width/2))
+        #     self.sj_main_sub_volume1.rotate(math.radians(-(90+angle_90deg)), ref_face.normal, intersection_pt)
+        # elif SI_angle < 89.9:
+        #     print("90-")
+        #     self.sj_main_sub_volume0 = Brep.from_box(self.main_beam.blank)
+        #     self.sj_main_sub_volume0.transform(s0)
+        #     self.sj_main_sub_volume0.translate(ref_face.normal*(self.main_beam.width/2))
+        #     self.sj_main_sub_volume0.rotate(-math.radians(SI_angle+LeadAngle), ref_face.normal, intersection_pt2)
+        #     self.sj_main_sub_volume1 = Brep.from_box(self.main_beam.blank)
+        #     self.sj_main_sub_volume1.transform(s1)
+        #     self.sj_main_sub_volume1.translate(ref_face.normal*(self.main_beam.width/2))
+        #     self.sj_main_sub_volume1.rotate(-math.radians(180+Angle_cross), ref_face.normal, intersection_pt)
+        # else:
+        #     print("90+")
+        #     self.sj_main_sub_volume0 = Brep.from_box(self.cross_beam.blank)
+        #     self.sj_main_sub_volume0.transform(s0)
+        #     self.sj_main_sub_volume0.translate(ref_face.normal*(self.main_beam.width/2))
+        #     self.sj_main_sub_volume0.rotate(math.radians(180+Angle_cross+LeadAngle), ref_face.normal, intersection_pt2)
+        #     self.sj_main_sub_volume1 = Brep.from_box(self.cross_beam.blank)
+        #     self.sj_main_sub_volume1.transform(s1)
+        #     self.sj_main_sub_volume1.translate(ref_face.normal*(self.main_beam.width/2))
+        #     self.sj_main_sub_volume1.rotate(math.radians(Angle_cross), ref_face.normal, intersection_pt)
+        # self.test = self.cutting_frame0
 
 
         return True
@@ -519,16 +563,17 @@ class TStepJoint(Joint):
             raise BeamJoinningError(beams=self.beams, joint=self, debug_info=str(ex))
         if self.check_stepjoint_boolean():
             if self.calc_params_stepjoint():
-                self.main_beam.add_features(BrepSubtraction(self.sj_main_sub_volume0))
-                self.features.append(BrepSubtraction(self.sj_main_sub_volume0))
-                self.main_beam.add_features(BrepSubtraction(self.sj_main_sub_volume1))
-                self.features.append(BrepSubtraction(self.sj_main_sub_volume1))
+                pass
+                # self.main_beam.add_features(BrepSubtraction(self.sj_main_sub_volume0))
+                # self.features.append(BrepSubtraction(self.sj_main_sub_volume0))
+                # self.main_beam.add_features(BrepSubtraction(self.sj_main_sub_volume1))
+                # self.features.append(BrepSubtraction(self.sj_main_sub_volume1))
                 # self.main_beam.add_features(CutFeature(self.cutting_frame0))
                 # self.features.append(self.cutting_frame0)
                 # self.main_beam.add_features(CutFeature(self.cutting_frame1))
                 # self.features.append(self.cutting_frame1)
-                self.cross_beam.add_features(BrepSubtraction(self.brep_sj_cross))
-                self.features.append(BrepSubtraction(self.brep_sj_cross))
+                # self.cross_beam.add_features(BrepSubtraction(self.brep_sj_cross))
+                # self.features.append(BrepSubtraction(self.brep_sj_cross))
         else:
             self.main_beam.add_features(CutFeature(cutting_plane))
             self.features.append(cutting_plane)
