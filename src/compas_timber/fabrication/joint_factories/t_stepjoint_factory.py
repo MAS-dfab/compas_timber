@@ -37,10 +37,10 @@ class TStepJointFactory(object):
         if joint.check_stepjoint_boolean():
             ref_face = main_part.beam.faces[joint.ref_face_id]
             joint.btlx_params_stepjoint_main["ReferencePlaneID"] = str(main_part.reference_surface_from_beam_face(ref_face))
-            main_part.processings.append(BTLxDoubleCut.create_process(joint.btlx_params_stepjoint_main, "Stepjoint"))
+            main_part.processings.append(BTLxDoubleCut.create_process(joint.btlx_params_stepjoint_main, "StepJoint"))
             ref_face_cross = cross_part.beam.faces[joint.cross_face_id]
             joint.btlx_params_stepjoint_cross["ReferencePlaneID"] = str(cross_part.reference_surface_from_beam_face(ref_face_cross))
-            cross_part.processings.append(BTLxLap.create_process(joint.btlx_params_stepjoint_cross, "Stepjoint Pocket"))
+            cross_part.processings.append(BTLxLap.create_process(joint.btlx_params_stepjoint_cross, "StepJoint Pocket"))
         # elif joint.birdsmouth:
         #     ref_face = main_part.beam.faces[joint.main_face_index]
         #     joint.btlx_params_main["ReferencePlaneID"] = str(main_part.reference_surface_from_beam_face(ref_face))
