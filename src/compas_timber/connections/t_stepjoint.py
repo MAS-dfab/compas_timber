@@ -190,8 +190,22 @@ class TStepJoint(Joint):
         projected_vec = Vector.from_start_end(start_point, projected_point)
         Angle = 180 - math.degrees(ref_frame.xaxis.angle_signed(projected_vec, ref_frame.zaxis))
         inclination = projected_vec.angle(center_line_vec, True)
+
+        offset_from_edge = self.drill_diameter*4
+        #####condition for doing vertical drilling
         if inclination == 0:
             Inclination = 90.0
+        elif inclination < 45:
+            start_displacement = (self.cross_beam.width/2) / math.sin(math.radians(inclination)) - offset_from_edge
+            if dot_vectors(self.main_beam.centerline.direction, self.cross_beam.centerline.direction)>0:
+                start_displacement = start_displacement
+            else:
+                start_displacement = -start_displacement
+            vector = -cutting_frame.xaxis
+            Inclination = 90.0
+            StartX = StartX - start_displacement
+            start_point.translate(vector*start_displacement)
+            line_point = start_point.translated(cutting_frame.normal*100)
         else:
             Inclination = inclination
 
