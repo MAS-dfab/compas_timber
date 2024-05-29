@@ -37,16 +37,16 @@ class TStepJointFactory(object):
         if joint.check_stepjoint_boolean():
             ref_face = main_part.beam.faces[joint.ref_face_id]
             joint.btlx_params_stepjoint_main["ReferencePlaneID"] = str(main_part.reference_surface_from_beam_face(ref_face))
-            main_part.processings.append(BTLxDoubleCut.create_process(joint.btlx_params_stepjoint_main, "StepJoint"))
+            main_part.processings.append(BTLxDoubleCut.create_process(joint.btlx_params_stepjoint_main, "TStepJoint"))
             ref_face_cross = cross_part.beam.faces[joint.cross_face_id]
             joint.btlx_params_stepjoint_cross["ReferencePlaneID"] = str(cross_part.reference_surface_from_beam_face(ref_face_cross))
-            cross_part.processings.append(BTLxLap.create_process(joint.btlx_params_stepjoint_cross, "StepJoint Pocket"))
+            cross_part.processings.append(BTLxLap.create_process(joint.btlx_params_stepjoint_cross, "TStepJoint Pocket"))
         # elif joint.birdsmouth:
         #     ref_face = main_part.beam.faces[joint.main_face_index]
         #     joint.btlx_params_main["ReferencePlaneID"] = str(main_part.reference_surface_from_beam_face(ref_face))
         #     main_part.processings.append(BTLxDoubleCut.create_process(joint.btlx_params_main, "Birdsmouth"))
         else:
-            main_part.processings.append(BTLxJackCut.create_process(main_part, cut_plane, "T-Butt"))
+            main_part.processings.append(BTLxJackCut.create_process(main_part, cut_plane, "TButt"))
 
         # joint.btlx_params_cross["reference_plane_id"] = str(cross_part.reference_surface_from_beam_face(ref_plane))
         # if joint.mill_depth > 0:
@@ -58,6 +58,6 @@ class TStepJointFactory(object):
 
         if joint.drill_diameter > 0:
             joint.btlx_drilling_params_cross["ReferencePlaneID"] = str(cross_part.reference_surface_from_beam_face(ref_plane))
-            cross_part.processings.append(BTLxDrilling.create_process(joint.btlx_drilling_params_cross, "StepJoint Drilling"))
+            cross_part.processings.append(BTLxDrilling.create_process(joint.btlx_drilling_params_cross, "TStepJoint Drilling"))
 
 BTLx.register_joint(TStepJoint, TStepJointFactory)
