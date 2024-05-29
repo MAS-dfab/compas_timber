@@ -69,6 +69,7 @@ class CategoryJointRule(component):
         return [name for name in names if (name != "key") and (name != "frame")]
 
     def AppendAdditionalMenuItems(self, menu):
+        menu.Items.Add(ToolStripSeparator())
         for name in self.classes.keys():
             item = menu.Items.Add(name, None, self.on_item_click)
             if self.joint_type and name == self.joint_type.__name__:

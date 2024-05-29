@@ -1,5 +1,7 @@
 from ghpythonlib.componentbase import executingcomponent as component
 from Grasshopper.Kernel.GH_RuntimeMessageLevel import Warning
+from System.Windows.Forms import ToolStripSeparator
+
 import inspect
 
 from compas_timber.ghpython.ghcomponent_helpers import manage_dynamic_params
@@ -46,6 +48,7 @@ class T_TopologyJointRule(component):
         return [name for name in names if (name != "key") and (name != "frame")]
 
     def AppendAdditionalMenuItems(self, menu):
+        menu.Items.Add(ToolStripSeparator())
         for name in self.classes.keys():
             item = menu.Items.Add(name, None, self.on_item_click)
             if self.joint_type and name == self.joint_type.__name__:

@@ -1,6 +1,7 @@
 from ghpythonlib.componentbase import executingcomponent as component
 from Grasshopper.Kernel.GH_RuntimeMessageLevel import Error
 from Grasshopper.Kernel.GH_RuntimeMessageLevel import Warning
+from System.Windows.Forms import ToolStripSeparator
 import inspect
 
 
@@ -76,6 +77,7 @@ class DirectJointRule(component):
         return inspect.getargspec(self.joint_type.__init__)[0][1:]
 
     def AppendAdditionalMenuItems(self, menu):
+        menu.Items.Add(ToolStripSeparator())
         for name in self.classes.keys():
             item = menu.Items.Add(name, None, self.on_item_click)
             if self.joint_type and name == self.joint_type.__name__:
