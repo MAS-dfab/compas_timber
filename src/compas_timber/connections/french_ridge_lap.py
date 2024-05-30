@@ -49,7 +49,7 @@ class FrenchRidgeLapJoint(Joint):
         self.drill_diameter = float(drill_diameter)
 
         self.reference_face_indices = {}
-        self.flip_lap()
+
 
     @property
     def __data__(self):
@@ -122,6 +122,7 @@ class FrenchRidgeLapJoint(Joint):
         if not (self.main_beam.width == self.cross_beam.width and self.main_beam.height == self.cross_beam.height):
             raise (BeamJoinningError(beams=self.beams, joint=self, debug_info="beams are not of same size"))
 
+        self.flip_lap()
         normal = cross_vectors(self.main_beam.frame.xaxis, self.cross_beam.frame.xaxis)
 
         indices = []
