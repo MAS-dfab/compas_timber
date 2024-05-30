@@ -80,7 +80,6 @@ class TStepJoint(Joint):
         data_dict = {
             "main_beam_key": self.main_beam_key,
             "cross_beam_key": self.cross_beam_key,
-            "mill_depth": self.mill_depth,
         }
         data_dict.update(super(TStepJoint, self).__data__)
         return data_dict
