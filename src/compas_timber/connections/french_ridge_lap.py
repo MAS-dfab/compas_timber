@@ -105,8 +105,8 @@ class FrenchRidgeLapJoint(Joint):
         return cfr
 
     def add_extensions(self):
-        self.main_beam.add_blank_extension(*self.main_beam.extension_to_plane(self.cutting_plane_top), joint_key=self.key)
-        self.cross_beam.add_blank_extension(*self.cross_beam.extension_to_plane(self.cutting_plane_bottom), joint_key=self.key)
+        self.main_beam.add_blank_extension(self.main_beam.extension_to_plane(self.cutting_plane_top)[0] + 50, self.main_beam.extension_to_plane(self.cutting_plane_top)[1]+50, joint_key=self.key)
+        self.cross_beam.add_blank_extension(self.cross_beam.extension_to_plane(self.cutting_plane_bottom)[0] + 50, self.cross_beam.extension_to_plane(self.cutting_plane_bottom)[1]+50, joint_key=self.key)
 
     def add_features(self):
         self.check_geometry()
