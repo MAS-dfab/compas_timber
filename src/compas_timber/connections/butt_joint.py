@@ -276,6 +276,7 @@ class ButtJoint(Joint):
         face_keys = sorted([key for key in face_dict.keys()], key=face_dict.get)
 
         frame1, og_frame = self.get_main_cutting_plane()  # offset pocket mill plane
+        frame1 = og_frame
         frame2 = self.cross_beam.faces[face_keys[1]]
 
         #print(frame1, frame2)
