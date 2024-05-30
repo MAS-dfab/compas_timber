@@ -143,9 +143,9 @@ class BTLxFrenchRidgeLap(object):
                 self._ref_edge = False
                 self.angle_rad = abs(self.angle_rad)
 
-            self.startX = abs(self.beam.width / math.tan(self.angle_rad))
+            self.startX = abs(self.beam.width / math.tan(self.angle_rad)) + self.beam.width
             if self.angle_lines < math.pi / 2:
-                self.startX = 0.0
+                self.startX = 0.0 + self.beam.width
 
         else:
             # if self.angle_rad < -math.pi / 2 or self.angle_rad > math.pi / 2:
@@ -159,9 +159,9 @@ class BTLxFrenchRidgeLap(object):
 
         if self.orientation == "end":
             if self._ref_edge:
-                self.startX = self.beam.blank_length - self.startX
+                self.startX = self.beam.blank_length - self.startX - self.beam.width
             else:
-                self.startX = self.beam.blank_length + self.startX
+                self.startX = self.beam.blank_length + self.startX - self.beam.width
 
     @classmethod
     def create_process(cls, part, joint, drill, joint_name = None):
