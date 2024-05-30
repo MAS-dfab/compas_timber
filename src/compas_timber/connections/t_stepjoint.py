@@ -447,16 +447,24 @@ class TStepJoint(Joint):
         pts_ph = [worldxy_xypoint, intersection_pt, intersection_pt2]
         vertices_ph_sj_cross = pts_ph
         vertices_ph_sj_cross.extend([pt.translated(-ref_face.normal*60) for pt in pts_ph])
-        if 89.9 <= StrutInclination <= 90.1:
-            self.ph_sj_cross = Polyhedron(vertices_ph_sj_cross, [[0, 2, 1], [3, 4, 5], [0, 1, 4, 3], [1, 2, 5, 4], [0, 3, 5, 2]])
-        elif StrutInclination < 89.9:
-            self.ph_sj_cross = Polyhedron(vertices_ph_sj_cross, [[0, 2, 1], [3, 4, 5], [0, 1, 4, 3], [1, 2, 5, 4], [0, 3, 5, 2]])
+        ph_sj_cross_0 = Polyhedron(vertices_ph_sj_cross, [[0, 2, 1], [3, 4, 5], [0, 1, 4, 3], [1, 2, 5, 4], [0, 3, 5, 2]])
+        brep_sj_cross_0 = Brep.from_mesh(ph_sj_cross_0)
+        if brep_sj_cross_0.volume > 0:
+            self.brep_sj_cross = brep_sj_cross_0
         else:
-            self.ph_sj_cross = Polyhedron(vertices_ph_sj_cross, [[0, 1, 2], [3, 5, 4], [0, 3, 4, 1], [1, 4, 5, 2], [0, 2, 5, 3]])
-        # print(self.ph_sj_cross)
-        self.brep_sj_cross = Brep.from_mesh(self.ph_sj_cross)
-        # print(self.brep_sj_cross)
+            self.brep_sj_cross = Brep.from_mesh(Polyhedron(vertices_ph_sj_cross, [[0, 1, 2], [3, 5, 4], [0, 3, 4, 1], [1, 4, 5, 2], [0, 2, 5, 3]]))
+        scale_points = [pt.translated(-ref_face.normal*30) for pt in pts_ph]
+        scale_origin = scale_points[0]
+        scale_xaxis = Vector.from_start_end(scale_origin, worldxy_xypoint)
+        scale_yaxis = Vector.from_start_end(scale_origin, scale_points[1])
 
+        # print(worldxy_xypoint/2)
+        # scale_origin = (worldxy_xypoint+vertices_ph_sj_cross[3])/2
+        # scale_xaxis = Vector.from_start_end(scale_origin, worldxy_xypoint)
+        # scale_yaxis = Vector.from_start_end(scale_origin, Point((vertices_ph_sj_cross[1]+vertices_ph_sj_cross[4])/2))
+        s0 = Scale.from_factors([2, 2, 2], Frame(scale_origin, scale_xaxis, scale_yaxis))
+        self.brep_sj_cross.transform(s0)
+        # print(self.brep_sj_cross.volume)
 
         vec_inter_pt = Vector.from_start_end(worldxy_xypoint, intersection_pt)
         vec_inter_pt2 = Vector.from_start_end(worldxy_xypoint, intersection_pt2)
@@ -474,7 +482,7 @@ class TStepJoint(Joint):
         # print(self.cutting_frame1.normal.dot(main_cutting_face[0].normal))
         if self.cutting_frame1.normal.dot(main_cutting_face[0].normal) < 0:
             self.cutting_frame1 = Frame(worldxy_xypoint, vec_inter_pt2, vec_edge)
-        self.test = self.cutting_frame1
+        self.test = self.brep_sj_cross
 
 
 
@@ -568,12 +576,12 @@ class TStepJoint(Joint):
                 # self.features.append(BrepSubtraction(self.sj_main_sub_volume0))
                 # self.main_beam.add_features(BrepSubtraction(self.sj_main_sub_volume1))
                 # self.features.append(BrepSubtraction(self.sj_main_sub_volume1))
-                # self.main_beam.add_features(CutFeature(self.cutting_frame0))
-                # self.features.append(self.cutting_frame0)
-                # self.main_beam.add_features(CutFeature(self.cutting_frame1))
-                # self.features.append(self.cutting_frame1)
-                # self.cross_beam.add_features(BrepSubtraction(self.brep_sj_cross))
-                # self.features.append(BrepSubtraction(self.brep_sj_cross))
+                self.main_beam.add_features(CutFeature(self.cutting_frame0))
+                self.features.append(self.cutting_frame0)
+                self.main_beam.add_features(CutFeature(self.cutting_frame1))
+                self.features.append(self.cutting_frame1)
+                self.cross_beam.add_features(BrepSubtraction(self.brep_sj_cross))
+                self.features.append(BrepSubtraction(self.brep_sj_cross))
         else:
             self.main_beam.add_features(CutFeature(cutting_plane))
             self.features.append(cutting_plane)
