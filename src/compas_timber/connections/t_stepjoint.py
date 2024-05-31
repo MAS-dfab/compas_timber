@@ -194,7 +194,7 @@ class TStepJoint(Joint):
         # offset_from_edge = self.drill_diameter*4
         offset_from_edge = 30.0
         #####condition for doing vertical drilling
-        if inclination == 0 or 39.9999<inclination<40.00001:
+        if inclination == 0 or 39.9999<inclination<40.00001 or 129.9999<inclination<130.00001:
             Inclination = 90.0
         # elif inclination < 45:
         #     start_displacement = (self.cross_beam.width/2) / math.sin(math.radians(inclination)) - offset_from_edge
