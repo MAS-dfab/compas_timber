@@ -190,6 +190,7 @@ class TStepJoint(Joint):
         projected_vec = Vector.from_start_end(start_point, projected_point)
         Angle = 180 - math.degrees(ref_frame.xaxis.angle_signed(projected_vec, ref_frame.zaxis))
         inclination = projected_vec.angle(center_line_vec, True)
+        self.test = [center_line_vec, projected_vec]
 
         # offset_from_edge = self.drill_diameter*4
         offset_from_edge = 30.0
@@ -232,7 +233,7 @@ class TStepJoint(Joint):
 
     def check_stepjoint_boolean(self):
         cross_product_centerlines = self.main_beam.centerline.direction.cross(self.cross_beam.centerline.direction).unitized()
-        dot_product_cp_crossbnormal = float(abs(cross_product_centerlines.dot(self.cross_beam.frame.normal)))
+        dot_product_cp_crossbnormal = float(abs(cross_product_centerlines.dot(self.main_beam.frame.normal)))
         if 0.999 < dot_product_cp_crossbnormal or dot_product_cp_crossbnormal < 0.001:
             return True
         else:
