@@ -191,23 +191,25 @@ class TStepJoint(Joint):
         Angle = 180 - math.degrees(ref_frame.xaxis.angle_signed(projected_vec, ref_frame.zaxis))
         inclination = projected_vec.angle(center_line_vec, True)
 
-        offset_from_edge = self.drill_diameter*4
+        # offset_from_edge = self.drill_diameter*4
+        offset_from_edge = 30.0
         #####condition for doing vertical drilling
-        if inclination == 0:
+        if inclination == 0 or 39.9999<inclination<40.00001:
             Inclination = 90.0
-        elif inclination < 45:
-            start_displacement = (self.cross_beam.width/2) / math.sin(math.radians(inclination)) - offset_from_edge
-            if dot_vectors(self.main_beam.centerline.direction, self.cross_beam.centerline.direction)>0:
-                start_displacement = start_displacement
-            else:
-                start_displacement = -start_displacement
-            vector = -cutting_frame.xaxis
-            Inclination = 90.0
-            StartX = StartX - start_displacement
-            start_point.translate(vector*start_displacement)
-            line_point = start_point.translated(cutting_frame.normal*100)
+        # elif inclination < 45:
+        #     start_displacement = (self.cross_beam.width/2) / math.sin(math.radians(inclination)) - offset_from_edge
+        #     if dot_vectors(self.main_beam.centerline.direction, self.cross_beam.centerline.direction)>0:
+        #         start_displacement = start_displacement
+        #     else:
+        #         start_displacement = -start_displacement
+        #     vector = -cutting_frame.xaxis
+        #     Inclination = 90.0
+        #     StartX = StartX - start_displacement
+        #     start_point.translate(vector*start_displacement)
+        #     line_point = start_point.translated(cutting_frame.normal*100)
         else:
             Inclination = inclination
+        print("Inclination", Inclination)
 
         self.btlx_drilling_params_cross = {
             "ReferencePlaneID": cross_face_index,
@@ -218,6 +220,7 @@ class TStepJoint(Joint):
             "Diameter": self.drill_diameter,
             "DepthLimited": "no",
             "Depth": 0.0
+
         }
 
         # Rhino geometry visualization
@@ -275,7 +278,7 @@ class TStepJoint(Joint):
         else:
             self.ref_face_id = faces_dot_sorted[0]
 
-        self.test = self.main_beam.faces[self.ref_face_id]
+        # self.test = self.main_beam.faces[self.ref_face_id]
 
         ref_face = self.main_beam.faces[self.ref_face_id]
 
@@ -471,7 +474,7 @@ class TStepJoint(Joint):
         vec_edge = Vector.from_start_end(worldxy_xypoint, vertices_ph_sj_cross[3])
 
         main_cutting_face = self.get_main_cutting_plane()
-        self.test = main_cutting_face[0]
+        # self.test = main_cutting_face[0]
 
 
         self.cutting_frame0 = Frame(worldxy_xypoint, vec_inter_pt, vec_edge)
@@ -482,7 +485,7 @@ class TStepJoint(Joint):
         # print(self.cutting_frame1.normal.dot(main_cutting_face[0].normal))
         if self.cutting_frame1.normal.dot(main_cutting_face[0].normal) < 0:
             self.cutting_frame1 = Frame(worldxy_xypoint, vec_inter_pt2, vec_edge)
-        self.test = self.brep_sj_cross
+        # self.test = self.brep_sj_cross
 
 
 
