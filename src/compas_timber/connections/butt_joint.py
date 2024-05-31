@@ -434,7 +434,8 @@ class ButtJoint(Joint):
         Angle = 180 - math.degrees(ref_frame.xaxis.angle_signed(projected_vec, ref_frame.zaxis))
         inclination = projected_vec.angle(center_line_vec, True)
 
-        offset_from_edge = self.drill_diameter*4
+        # offset_from_edge = self.drill_diameter*4
+        offset_from_edge = 40.0
         #####condition for doing vertical drilling
         if inclination == 0:
             Inclination = 90.0
