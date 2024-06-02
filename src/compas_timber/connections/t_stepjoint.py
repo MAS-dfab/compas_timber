@@ -190,8 +190,6 @@ class TStepJoint(Joint):
         projected_vec = Vector.from_start_end(start_point, projected_point)
         Angle = 180 - math.degrees(ref_frame.xaxis.angle_signed(projected_vec, ref_frame.zaxis))
         inclination = projected_vec.angle(center_line_vec, True)
-        self.test = [center_line_vec, projected_vec]
-
         # offset_from_edge = self.drill_diameter*4
         offset_from_edge = 30.0
         #####condition for doing vertical drilling
@@ -278,8 +276,6 @@ class TStepJoint(Joint):
             self.ref_face_id = faces_dot_sorted[3]
         else:
             self.ref_face_id = faces_dot_sorted[0]
-
-        # self.test = self.main_beam.faces[self.ref_face_id]
 
         ref_face = self.main_beam.faces[self.ref_face_id]
 
@@ -475,7 +471,6 @@ class TStepJoint(Joint):
         vec_edge = Vector.from_start_end(worldxy_xypoint, vertices_ph_sj_cross[3])
 
         main_cutting_face = self.get_main_cutting_plane()
-        # self.test = main_cutting_face[0]
 
 
         self.cutting_frame0 = Frame(worldxy_xypoint, vec_inter_pt, vec_edge)
@@ -486,7 +481,6 @@ class TStepJoint(Joint):
         # print(self.cutting_frame1.normal.dot(main_cutting_face[0].normal))
         if self.cutting_frame1.normal.dot(main_cutting_face[0].normal) < 0:
             self.cutting_frame1 = Frame(worldxy_xypoint, vec_inter_pt2, vec_edge)
-        # self.test = self.brep_sj_cross
 
 
 
@@ -541,7 +535,6 @@ class TStepJoint(Joint):
         #     self.sj_main_sub_volume1.transform(s1)
         #     self.sj_main_sub_volume1.translate(ref_face.normal*(self.main_beam.width/2))
         #     self.sj_main_sub_volume1.rotate(math.radians(Angle_cross), ref_face.normal, intersection_pt)
-        # self.test = self.cutting_frame0
 
 
         return True
