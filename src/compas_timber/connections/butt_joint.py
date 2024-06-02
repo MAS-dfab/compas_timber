@@ -280,10 +280,11 @@ class ButtJoint(Joint):
         frame2 = self.cross_beam.faces[face_keys[1]]
 
         #print(frame1, frame2)
-        self.test.append(og_frame)
+        # self.test.append(og_frame)
 
         plane1, plane2 = Plane(frame1.point, -frame1.zaxis), Plane.from_frame(frame2)
         intersect_vec = Vector.from_start_end(*intersection_plane_plane(plane2, plane1))
+        # self.test = [plane1, plane2]
 
         angles_dict = {}
         for i, face in enumerate(self.main_beam.faces[0:4]):
@@ -295,6 +296,7 @@ class ButtJoint(Joint):
                 # print(dist, self.main_beam.key, self.cross_beam.key)
                 if dist < 40.0:
                     angles_dict[i] = face.normal.angle(intersect_vec)
+        # self.test = inter_pt
         # if angles dict is empty then return False
         if not angles_dict:
             # print("Not birdsmouthing")
@@ -368,8 +370,8 @@ class ButtJoint(Joint):
 
         if Angle1 > Angle2:
             Angle1, Angle2 = Angle2, Angle1
-            Inclination1, Inclination2 = Inclination2, Inclination1
-
+            Inclination1, Inclination2 = Inclination2, (180-Inclination1)
+        print(Inclination2)
         self.btlx_params_main = {
             "Orientation": self.ends[str(self.main_beam.key)],
             "StartX": StartX,

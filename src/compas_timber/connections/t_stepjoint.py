@@ -208,7 +208,7 @@ class TStepJoint(Joint):
         #     line_point = start_point.translated(cutting_frame.normal*100)
         else:
             Inclination = inclination
-        print("Inclination", Inclination)
+        # print("Inclination", Inclination)
 
         self.btlx_drilling_params_cross = {
             "ReferencePlaneID": cross_face_index,
