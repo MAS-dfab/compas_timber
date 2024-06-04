@@ -423,7 +423,6 @@ class ButtJoint(Joint):
         start_point = Point(*point_xyz)
         ref_point = start_point.transformed(Transformation.from_frame_to_frame(ref_frame, Frame.worldXY()))
         StartX, StartY = ref_point[0], ref_point[1]
-
         param_point_on_line = self.main_beam.centerline.closest_point(start_point, True)[1]
         if param_point_on_line > 0.5:
             line_point = self.main_beam.centerline.end
@@ -437,16 +436,21 @@ class ButtJoint(Joint):
         inclination = projected_vec.angle(center_line_vec, True)
 
         # offset_from_edge = self.drill_diameter*4
-        offset_from_edge = 40.0
+        offset_from_edge = 20.0
         #####condition for doing vertical drilling
         if inclination == 0:
             Inclination = 90.0
         elif inclination < 45:
-            start_displacement = (self.cross_beam.width/2) / math.sin(math.radians(inclination)) - offset_from_edge
-            if dot_vectors(self.main_beam.centerline.direction, self.cross_beam.centerline.direction)>0:
-                start_displacement = start_displacement
+            if self.ends[str(self.main_beam.key)] == "start":
+                main_centerline = self.main_beam.centerline.direction
             else:
+                main_centerline = -self.main_beam.centerline.direction
+
+            start_displacement = (self.cross_beam.width/2) / math.sin(math.radians(inclination)) - offset_from_edge
+            if dot_vectors(self.cross_beam.centerline.direction, main_centerline)>0:
                 start_displacement = -start_displacement
+            else:
+                start_displacement = start_displacement
             vector = -cutting_frame.xaxis
             Inclination = 90.0
             StartX = StartX - start_displacement
