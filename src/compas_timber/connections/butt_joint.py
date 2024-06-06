@@ -276,13 +276,15 @@ class ButtJoint(Joint):
         face_keys = sorted([key for key in face_dict.keys()], key=face_dict.get)
 
         frame1, og_frame = self.get_main_cutting_plane()  # offset pocket mill plane
+        frame1 = og_frame
         frame2 = self.cross_beam.faces[face_keys[1]]
 
         #print(frame1, frame2)
-        self.test.append(og_frame)
+        # self.test.append(og_frame)
 
         plane1, plane2 = Plane(frame1.point, -frame1.zaxis), Plane.from_frame(frame2)
         intersect_vec = Vector.from_start_end(*intersection_plane_plane(plane2, plane1))
+        # self.test = [plane1, plane2]
 
         angles_dict = {}
         for i, face in enumerate(self.main_beam.faces[0:4]):
@@ -294,6 +296,7 @@ class ButtJoint(Joint):
                 # print(dist, self.main_beam.key, self.cross_beam.key)
                 if dist < 40.0:
                     angles_dict[i] = face.normal.angle(intersect_vec)
+        # self.test = inter_pt
         # if angles dict is empty then return False
         if not angles_dict:
             # print("Not birdsmouthing")
@@ -367,8 +370,8 @@ class ButtJoint(Joint):
 
         if Angle1 > Angle2:
             Angle1, Angle2 = Angle2, Angle1
-            Inclination1, Inclination2 = Inclination2, Inclination1
-
+            Inclination1, Inclination2 = Inclination2, (180-Inclination1)
+        print(Inclination2)
         self.btlx_params_main = {
             "Orientation": self.ends[str(self.main_beam.key)],
             "StartX": StartX,
@@ -420,7 +423,6 @@ class ButtJoint(Joint):
         start_point = Point(*point_xyz)
         ref_point = start_point.transformed(Transformation.from_frame_to_frame(ref_frame, Frame.worldXY()))
         StartX, StartY = ref_point[0], ref_point[1]
-
         param_point_on_line = self.main_beam.centerline.closest_point(start_point, True)[1]
         if param_point_on_line > 0.5:
             line_point = self.main_beam.centerline.end
@@ -433,16 +435,22 @@ class ButtJoint(Joint):
         Angle = 180 - math.degrees(ref_frame.xaxis.angle_signed(projected_vec, ref_frame.zaxis))
         inclination = projected_vec.angle(center_line_vec, True)
 
-        offset_from_edge = self.drill_diameter*4
+        # offset_from_edge = self.drill_diameter*4
+        offset_from_edge = 20.0
         #####condition for doing vertical drilling
         if inclination == 0:
             Inclination = 90.0
         elif inclination < 45:
-            start_displacement = (self.cross_beam.width/2) / math.sin(math.radians(inclination)) - offset_from_edge
-            if dot_vectors(self.main_beam.centerline.direction, self.cross_beam.centerline.direction)>0:
-                start_displacement = start_displacement
+            if self.ends[str(self.main_beam.key)] == "start":
+                main_centerline = self.main_beam.centerline.direction
             else:
+                main_centerline = -self.main_beam.centerline.direction
+
+            start_displacement = (self.cross_beam.width/2) / math.sin(math.radians(inclination)) - offset_from_edge
+            if dot_vectors(self.cross_beam.centerline.direction, main_centerline)>0:
                 start_displacement = -start_displacement
+            else:
+                start_displacement = start_displacement
             vector = -cutting_frame.xaxis
             Inclination = 90.0
             StartX = StartX - start_displacement

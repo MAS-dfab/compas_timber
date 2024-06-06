@@ -10,6 +10,7 @@ from .x_halflap import XHalfLapJoint
 from .t_halflap import THalfLapJoint
 from .l_halflap import LHalfLapJoint
 from .t_stirnversatz import TStirnversatzJoint
+from .t_stepjoint import TStepJoint
 from .solver import ConnectionSolver
 from .solver import JointTopology
 from .solver import find_neighboring_beams
@@ -27,6 +28,7 @@ __all__ = [
     "XHalfLapJoint",
     "THalfLapJoint",
     "TStirnversatzJoint",
+    "TStepJoint",
     "LHalfLapJoint",
     "NullJoint",
     "FrenchRidgeLapJoint",

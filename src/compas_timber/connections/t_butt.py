@@ -83,11 +83,9 @@ class TButtJoint(ButtJoint):
                 self.cross_beam.add_features(BrepSubtraction(self.brep_sj_cross))
                 self.features.append(BrepSubtraction(self.brep_sj_cross))
         else:
-            if self.mill_depth > 0:
-                self.cross_beam.add_features(MillVolume(self.subtraction_volume()))
-                self.features.append(MillVolume(self.subtraction_volume()))
             if self.birdsmouth:
                 if self.calc_params_birdsmouth():
+                    self.mill_depth = 0.0
                     self.main_beam.add_features(BrepSubtraction(self.bm_sub_volume))
                     self.features.append(BrepSubtraction(self.bm_sub_volume))
                 else:
@@ -97,6 +95,9 @@ class TButtJoint(ButtJoint):
             else:
                 self.main_beam.add_features(CutFeature(cutting_plane))
                 self.features.append(cutting_plane)
+            if self.mill_depth > 0:
+                self.cross_beam.add_features(MillVolume(self.subtraction_volume()))
+                self.features.append(MillVolume(self.subtraction_volume()))
         if self.drill_diameter > 0:
             self.cross_beam.add_features(DrillFeature(*self.calc_params_drilling()))
             self.features.append(DrillFeature(*self.calc_params_drilling()))
