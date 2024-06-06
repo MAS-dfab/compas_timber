@@ -48,13 +48,21 @@ class TButtJoint(ButtJoint):
 
         #######IF STEPJOINT --> NO EXTENSION#########
         assert self.main_beam and self.cross_beam
-        extension_tolerance = 0.01  # TODO: this should be proportional to the unit used
+        extension_tolerance = 10.0  # TODO: this should be proportional to the unit used
         self.check_joint_boolean()
         if self.birdsmouth:
-            extension_plane_main = self.get_face_most_towards_beam(self.main_beam, self.cross_beam, ignore_ends=True)[1]
+            face_dict = self._beam_side_incidence(self.main_beam, self.cross_beam, True)
+            face_index = sorted(face_dict, key=face_dict.get)[1]   # type: ignore
+            print(sorted(face_dict, key=face_dict.get))
+            extension_plane_main = self.cross_beam.faces[face_index]
+            start_main, end_main = self.main_beam.extension_to_plane(extension_plane_main)
+            extension_plane_main_back = self.get_face_most_towards_beam(self.main_beam, self.cross_beam, ignore_ends=True)[1]
+            start_main_back, end_main_back = self.main_beam.extension_to_plane(extension_plane_main_back)
+            start_main = min(start_main, start_main_back)
+            end_main = min(end_main, end_main_back)
         else:
             extension_plane_main = self.get_face_most_ortho_to_beam(self.main_beam, self.cross_beam, ignore_ends=True)[1]
-        start_main, end_main = self.main_beam.extension_to_plane(extension_plane_main)
+            start_main, end_main = self.main_beam.extension_to_plane(extension_plane_main)
         self.main_beam.add_blank_extension(start_main + extension_tolerance, end_main + extension_tolerance, self.key)
 
     def add_features(self):

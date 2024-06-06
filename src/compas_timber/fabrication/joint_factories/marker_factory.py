@@ -34,8 +34,8 @@ class MarkerFactory(object):
 
         if len(intervals) == 1:
             if intervals.values()[0] > min_length*2:
-                spacing = MarkerFactory.round_to_nearest(part.length - min_length*2, interval_spacing)
-                first_position = min_length
+                spacing = MarkerFactory.round_to_nearest(intervals.values()[0] - min_length*2, interval_spacing)
+                first_position = float(intervals.keys()[0]) - (intervals.values()[0]/2) + (min_length)
                 last_position = first_position + spacing
                 if spacing not in existing_intervals:
                     return [first_position, last_position]
@@ -153,8 +153,8 @@ class MarkerFactory(object):
                 part.processings.append(BTLxDrilling.create_process(dict, "Marker"))
             if len(positions) > 1:
                 return abs(positions[0] - positions[1]), positions[0]
-        return None, positions[0]
-
+            return None, positions[0]
+        return None, None
 
 BTLx.register_feature("MarkerFactory", MarkerFactory)
 

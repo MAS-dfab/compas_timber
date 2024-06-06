@@ -2,6 +2,7 @@ import itertools
 import math
 
 from compas.geometry import Point
+from compas.geometry import Vector
 from compas.geometry import add_vectors
 from compas.geometry import angle_vectors
 from compas.geometry import closest_point_on_line
@@ -111,6 +112,16 @@ class ConnectionSolver(object):
 
         neighboring_pairs = find_neighboring_beams(beams, inflate_by=max_distance) if rtree else itertools.combinations(beams, 2)
         return neighboring_pairs
+
+    def get_intersection_parameters(self, joints):
+        for joint in joints:
+            pair_centerlines = [beam.centerline for beam in joint.beams]
+            intersection_points = intersection_line_line(*pair_centerlines)
+            for i, beam in enumerate(joint.beams):
+                dist_to_intersect = distance_point_point(beam.centerline.start, intersection_points[i])
+                beam.attributes["intersections"].append(dist_to_intersect / beam.centerline.length)
+
+
 
     @classmethod
     def find_intersection_parameters(cls, beams, tol=None):

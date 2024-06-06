@@ -51,12 +51,13 @@ class BTLx(object):
         ]
     )
 
-    def __init__(self, assembly):
+    def __init__(self, assembly, do_marker_drilling = False):
         self.assembly = assembly
         self.parts = {}
         self._test = []
         self.joints = assembly.joints
         self.existing_intervals = []
+        self.do_marker_drilling = do_marker_drilling
         self.process_assembly()
 
     @property
@@ -101,12 +102,16 @@ class BTLx(object):
             # if part.do_marker:
             #     factory_type = self.REGISTERED_FEATURES.get("MarkerFactory")
             #     factory_type.apply_processings(part)
-            factory_type = self.REGISTERED_FEATURES.get("MarkerFactory")
-            interval, frame_x_pos = factory_type.apply_processings(part, self.existing_intervals)
-            self.existing_intervals.append(interval)
-            part.processings[-1].header_attributes["ReferencePlaneID"] = id_face
-            frame = part.reference_surface_planes(id_face).copy()
-            frame.point = frame.point + frame.xaxis * frame_x_pos
+            if self.do_marker_drilling:
+                factory_type = self.REGISTERED_FEATURES.get("MarkerFactory")
+                interval, frame_x_pos = factory_type.apply_processings(part, self.existing_intervals)
+                if interval:
+                    self.existing_intervals.append(interval)
+                if frame_x_pos and id_face:
+                    part.processings[-1].header_attributes["ReferencePlaneID"] = id_face
+                    frame = part.reference_surface_planes(id_face).copy()
+                    frame.point = frame.point + frame.xaxis * frame_x_pos
+
 
 
     @classmethod

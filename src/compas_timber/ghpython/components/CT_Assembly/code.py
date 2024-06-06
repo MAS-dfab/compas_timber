@@ -151,7 +151,7 @@ class Assembly(component):
             self._beam_map[id(beam)] = c_beam
         beams = Assembly.beams
 
-        solver.find_intersection_parameters(Assembly.beams)
+        solver.get_intersection_parameters(Assembly.joints)
         joints = self.get_joints_from_rules(beams, JointRules, topologies)
 
         if joints:

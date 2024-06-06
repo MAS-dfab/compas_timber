@@ -16,6 +16,12 @@
                 "scriptParamAccess": 0
             },
             {
+                "name": "MoCap drill",
+                "description": "set to True to include the drilling for MoCap markers",
+                "typeHintID": "bool",
+                "scriptParamAccess": 0
+            },
+            {
                 "name": "Path",
                 "description": "Filepath for new BTLx.",
                 "typeHintID": "none",
