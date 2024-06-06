@@ -92,11 +92,21 @@ class BTLx(object):
             factory_type = self.REGISTERED_JOINTS.get(str(type(joint)))
             factory_type.apply_processings(joint, self.parts)
         for part in self.parts.values():
+            id_face = 1
             if part.ID:
                 factory_type = self.REGISTERED_FEATURES.get("TextID")
                 factory_type.apply_processings(part)
+                id_face = part.processings[-1].header_attributes["ReferencePlaneID"]
+
+            # if part.do_marker:
+            #     factory_type = self.REGISTERED_FEATURES.get("MarkerFactory")
+            #     factory_type.apply_processings(part)
             factory_type = self.REGISTERED_FEATURES.get("MarkerFactory")
-            self.existing_intervals.append(factory_type.apply_processings(part, self.existing_intervals))
+            interval, frame_x_pos = factory_type.apply_processings(part, self.existing_intervals)
+            self.existing_intervals.append(interval)
+            part.processings[-1].header_attributes["ReferencePlaneID"] = id_face
+            frame = part.reference_surface_planes(id_face).copy()
+            frame.point = frame.point + frame.xaxis * frame_x_pos
 
 
     @classmethod
@@ -194,8 +204,8 @@ class BTLxPart(object):
             beam.frame.yaxis,
         )  # I used long_edge[2] because it is in Y and Z negative. Using that as reference puts the beam entirely in positive coordinates.
         self.blank_length = beam.blank_length
-        self.ID = beam.attributes["ID"]+str(beam.key)
-        self.intersections = beam.intersections
+        self.ID = str(beam.attributes["ID"])+str(beam.key)
+        self.intersections = beam.attributes["intersections"]
         self._reference_surfaces = []
         self.processings = []
         self._et_element = None

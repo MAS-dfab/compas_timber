@@ -27,7 +27,7 @@ class TextFactory(object):
                 optimal_parameter = (all_intersections[i] + all_intersections[i+1]) / 2
 
         optimal_parameter = 0.5 if optimal_parameter in {0, 1} else optimal_parameter
-        optimal_position = optimal_parameter * part.length
+        optimal_position = optimal_parameter * part.length + 150.0
         return optimal_position
 
     @staticmethod

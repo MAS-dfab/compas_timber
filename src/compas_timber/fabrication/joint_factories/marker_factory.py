@@ -1,8 +1,7 @@
 from compas_timber.parts import BrepSubtraction
 from collections import OrderedDict
 from compas_timber.fabrication import BTLx
-from compas_timber.fabrication import BTLxText
-from datatable import first, last
+from compas_timber.fabrication import BTLxDrilling
 
 class MarkerFactory(object):
     """
@@ -21,37 +20,48 @@ class MarkerFactory(object):
         """Finds the optimal parameter on the line for the text engraving process."""
         intersections = set(part.intersections)
         intersections.update({0, 1})  # Ensure 0 and 1 are included
-        all_intersections = sorted(intersections)
+        all_intersections = sorted([position*part.length for position in intersections])
+        print("all_intersections: ", all_intersections)
         interval_spacing = 20
         min_length = 200
         intervals = OrderedDict()
         for i in range(len(all_intersections)-1):
             if all_intersections[i+1] - all_intersections[i] > min_length:
-                intervals[int(round((all_intersections[i+1] - all_intersections[i])/2))] = all_intersections[i+1] - all_intersections[i]
-
-        if len(intervals) == 0:
+                intervals[(all_intersections[i+1] + all_intersections[i])/2] = all_intersections[i+1] - all_intersections[i]
+        print("intervals: ", intervals)
+        if len(intervals.keys()) == 0:
             raise Exception("No suitable intervals found for marker placement.")
 
         if len(intervals) == 1:
             if intervals.values()[0] > min_length*2:
                 spacing = MarkerFactory.round_to_nearest(part.length - min_length*2, interval_spacing)
-                return min_length, spacing + min_length
-            else:
-                return part.length/2
+                first_position = min_length
+                last_position = first_position + spacing
+                if spacing not in existing_intervals:
+                    return [first_position, last_position]
+                while last_position > first_position + min_length:
+                    last_position -= interval_spacing
+                    if last_position - first_position not in existing_intervals:
+                        return [first_position, last_position]
+                return [part.length/2]
+            elif intervals.values()[0] > min_length:
+                return [part.length/2]
 
 
         if len(intervals) > 1:
             spacing = MarkerFactory.round_to_nearest(intervals.keys()[-1] - intervals.keys()[0], interval_spacing)
-
-            if spacing in existing_intervals:
+            if spacing not in existing_intervals:
+                return [intervals.keys()[0], intervals.keys()[0] + spacing]
+            else:
                 found = False
                 for i in range(len(intervals.keys())-1):                                                    #loop through all first positions
                     first_position = intervals.keys()[i]
-                    for j in range(len(intervals.keys())-1, 1, -1):                                         #loop through all last positions
+                    for j in range(len(intervals.keys())-1, 0, -1):                                         #loop through all last positions
                         last_position = intervals.keys()[j]
                         try_bigger = True
                         try_smaller = True
-                        while try_bigger or try_smaller:                                                    #while there is room to incement steps up or down
+                        i = 0
+                        while ((try_bigger or try_smaller) and i<2000):                                                  #while there is room to incement steps up or down
                             step = interval_spacing
                             if try_bigger:
                                 if spacing + step not in existing_intervals:                                #check if the bigger spacing is already taken
@@ -78,8 +88,12 @@ class MarkerFactory(object):
                                     else:                                                                   #if not possible, stop trying smaller
                                         try_smaller = False
                             step += interval_spacing
+                            i+=1
                         if found:
-                            return first_position, last_position
+
+                            return [first_position, last_position]
+
+        return None
 
 
 
@@ -87,7 +101,7 @@ class MarkerFactory(object):
     def drill_params(x_position, y_position, face_id = 1):
         """Returns the text engraving parameters for the BTLx part."""
         return {
-            "ReferencePlaneID": face_id, #default face
+            "ReferencePlaneID": str(face_id), #default face
             "StartX": x_position, #7=number of characters in the ID
             "StartY": y_position, #manually center it since text is not centered in easybeam
             "Angle": 0.0,
@@ -117,7 +131,7 @@ class MarkerFactory(object):
         None
 
         """
-
+        print("Applying MarkerFactory to part: ", part.key)
 
 
 
@@ -130,15 +144,17 @@ class MarkerFactory(object):
         positions = MarkerFactory.get_marker_positions(part, existing_intervals)
 
         param_dicts = []
-        for position in positions:
-            param_dicts.append(MarkerFactory.drill_params(position - 105.0/2.0, 50, ref_plane_id))
-            param_dicts.append(MarkerFactory.drill_params(position + 105.0/2.0, 50, ref_plane_id))
-            param_dicts.append(MarkerFactory.drill_params(position + 105.0/2.0, 50, ref_plane_id+1 if ref_plane_id <4 else 1))
+        if positions:
+            for position in positions:
+                param_dicts.append(MarkerFactory.drill_params(position - 105.0/2.0, 50, ref_plane_id))
+                param_dicts.append(MarkerFactory.drill_params(position + 105.0/2.0, 50, ref_plane_id))
 
+            for dict in param_dicts:
+                part.processings.append(BTLxDrilling.create_process(dict, "Marker"))
+            if len(positions) > 1:
+                return abs(positions[0] - positions[1]), positions[0]
+        return None, positions[0]
 
-        for dict in param_dicts:
-            part.processings.append(BTLxText.create_process(dict, "Marker"))
-        return abs(positions[0] - positions[1])
 
 BTLx.register_feature("MarkerFactory", MarkerFactory)
 

@@ -12,6 +12,7 @@ from .joint_factories.l_miter_factory import LMiterFactory
 from .joint_factories.l_halflap_factory import LHalfLapFactory
 from .joint_factories.t_butt_factory import TButtFactory
 from .joint_factories.text_factory import TextFactory
+from .joint_factories.marker_factory import MarkerFactory
 
 __all__ = [
     "BTLx",
@@ -28,4 +29,5 @@ __all__ = [
     "LMiterFactory",
     "FrenchRidgeFactory",
     "TextFactory",
+    "MarkerFactory",
 ]

@@ -126,7 +126,7 @@ class ConnectionSolver(object):
                 for i, p in enumerate(pair):
                     # Check if the parameter is within [0, 1], if not, adjust it
                     intersection_params[i]= max(0, min(1,(intersection_params[i]))) #//TODO: this is just a temporal solution
-                    beams[p].intersections.append(intersection_params[i])
+                    beams[p].attributes["intersections"].append(intersection_params[i])
 
     def find_topology(self, beam_a, beam_b, tol=TOLERANCE, max_distance=None):
         """If `beam_a` and `beam_b` intersect within the given `max_distance`, return the topology type of the intersection.

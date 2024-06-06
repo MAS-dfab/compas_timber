@@ -94,7 +94,7 @@ class Beam(Part):
         self.length = length
         self.features = []
         self._blank_extensions = {}
-        self.intersections = []
+        self.attributes["intersections"] = []
         self.attributes["ID"] = [] ### TODO names to be defined
         self.attributes["assembly_no"] = [] ### TODO names to be defined
         self.attributes["beam_no"] = [] ### TODO names to be defined
