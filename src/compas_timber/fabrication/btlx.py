@@ -8,6 +8,8 @@ from datetime import datetime
 
 import compas
 from compas.geometry import Frame
+from compas.geometry import Point
+from compas.geometry import Vector
 from compas.geometry import angle_vectors
 from compas.geometry import Transformation
 
@@ -110,13 +112,25 @@ class BTLx(object):
                     self.mocap_dict[part.ID]["spacing"] = interval
                     self.existing_intervals.append(int(interval))
                 if frame_x_pos and id_face:
+                    if not interval:
+                        interval = 0
+                        self.mocap_dict[part.ID]["single_marker"] = True
+                    y_axis = Vector.Zaxis()
+                    if id_face == 2:
+                        y_axis = -Vector.Yaxis()
+                    elif id_face == 3:
+                        y_axis = -Vector.Zaxis()
+                    elif id_face == 4:
+                        y_axis = Vector.Yaxis()
+
                     part.processings[-1].header_attributes["ReferencePlaneID"] = id_face
-                    frame = part.beam.frame.copy()
-                    frame_point = frame.point + frame.xaxis * (frame_x_pos + (interval/2.0))
-                    frame_ref = part.reference_surface_planes(id_face)
-                    frame = Frame(frame_point, frame_ref.xaxis, frame_ref.yaxis)
-                    xform = Transformation.from_frame_to_frame(frame, part.beam.frame)
-                    self.mocap_dict[part.ID]["beam_frame_transformation"] = xform
+                    beam_point = Point(-(frame_x_pos + (interval/2.0)),0,0)
+                    beam_frame = Frame(beam_point, Vector.Xaxis(), y_axis)
+
+
+                    self.mocap_dict[part.ID]["beam_frame_relative_to_MoCap_Frame"] = beam_frame
+
+
 
 
 
