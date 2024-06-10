@@ -58,6 +58,7 @@ class BTLx(object):
         self.joints = assembly.joints
         self.existing_intervals = []
         self.do_marker_drilling = do_marker_drilling
+        self.mocap_dict = {}
         self.process_assembly()
 
     @property
@@ -98,7 +99,7 @@ class BTLx(object):
                 factory_type = self.REGISTERED_FEATURES.get("TextID")
                 factory_type.apply_processings(part)
                 id_face = part.processings[-1].header_attributes["ReferencePlaneID"]
-
+                self.mocap_dict[part.ID] = {}
             # if part.do_marker:
             #     factory_type = self.REGISTERED_FEATURES.get("MarkerFactory")
             #     factory_type.apply_processings(part)
@@ -106,11 +107,18 @@ class BTLx(object):
                 factory_type = self.REGISTERED_FEATURES.get("MarkerFactory")
                 interval, frame_x_pos = factory_type.apply_processings(part, self.existing_intervals)
                 if interval:
-                    self.existing_intervals.append(interval)
+                    self.mocap_dict[part.ID]["spacing"] = interval
+                    self.existing_intervals.append(int(interval))
                 if frame_x_pos and id_face:
                     part.processings[-1].header_attributes["ReferencePlaneID"] = id_face
-                    frame = part.reference_surface_planes(id_face).copy()
-                    frame.point = frame.point + frame.xaxis * frame_x_pos
+                    frame = part.beam.frame.copy()
+                    frame_point = frame.point + frame.xaxis * (frame_x_pos + (interval/2.0))
+                    frame_ref = part.reference_surface_planes(id_face)
+                    frame = Frame(frame_point, frame_ref.xaxis, frame_ref.yaxis)
+                    xform = Transformation.from_frame_to_frame(frame, part.beam.frame)
+                    self.mocap_dict[part.ID]["beam_frame_transformation"] = xform
+
+
 
 
 
@@ -156,7 +164,6 @@ class BTLx(object):
         file_history = ET.Element("FileHistory")
         file_history.append(ET.Element("InitialExportProgram", self.history))
         return file_history
-
 
 class BTLxPart(object):
     """Class representing a BTLx part. This acts as a wrapper for a Beam object.
@@ -209,12 +216,11 @@ class BTLxPart(object):
             beam.frame.yaxis,
         )  # I used long_edge[2] because it is in Y and Z negative. Using that as reference puts the beam entirely in positive coordinates.
         self.blank_length = beam.blank_length
-        self.ID = str(beam.attributes["ID"])+str(beam.key)
+        self.ID = (str(beam.attributes["ID"])+str(beam.key)) if beam.attributes["ID"] else str(beam.key)
         self.intersections = beam.attributes["intersections"]
         self._reference_surfaces = []
         self.processings = []
         self._et_element = None
-
 
     def reference_surface_from_beam_face(self, beam_face):
         """Finds the reference surface with normal that matches the normal of the beam face argument

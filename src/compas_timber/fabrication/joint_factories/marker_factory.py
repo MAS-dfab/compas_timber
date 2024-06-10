@@ -21,14 +21,12 @@ class MarkerFactory(object):
         intersections = set(part.intersections)
         intersections.update({0, 1})  # Ensure 0 and 1 are included
         all_intersections = sorted([position*part.length for position in intersections])
-        print("all_intersections: ", all_intersections)
         interval_spacing = 20
         min_length = 200
         intervals = OrderedDict()
         for i in range(len(all_intersections)-1):
             if all_intersections[i+1] - all_intersections[i] > min_length:
                 intervals[(all_intersections[i+1] + all_intersections[i])/2] = all_intersections[i+1] - all_intersections[i]
-        print("intervals: ", intervals)
         if len(intervals.keys()) == 0:
             raise Exception("No suitable intervals found for marker placement.")
 
@@ -50,6 +48,7 @@ class MarkerFactory(object):
 
         if len(intervals) > 1:
             spacing = MarkerFactory.round_to_nearest(intervals.keys()[-1] - intervals.keys()[0], interval_spacing)
+            print(part.key, intervals)
             if spacing not in existing_intervals:
                 return [intervals.keys()[0], intervals.keys()[0] + spacing]
             else:
@@ -57,7 +56,7 @@ class MarkerFactory(object):
                 for i in range(len(intervals.keys())-1):                                                    #loop through all first positions
                     first_position = intervals.keys()[i]
                     for j in range(len(intervals.keys())-1, 0, -1):                                         #loop through all last positions
-                        last_position = intervals.keys()[j]
+                        last_position = first_position + spacing
                         try_bigger = True
                         try_smaller = True
                         i = 0
@@ -131,7 +130,6 @@ class MarkerFactory(object):
         None
 
         """
-        print("Applying MarkerFactory to part: ", part.key)
 
 
 
@@ -145,6 +143,8 @@ class MarkerFactory(object):
 
         param_dicts = []
         if positions:
+            if len(positions) == 1:
+                print("Single Marker")
             for position in positions:
                 param_dicts.append(MarkerFactory.drill_params(position - 105.0/2.0, 47, ref_plane_id))
                 param_dicts.append(MarkerFactory.drill_params(position + 105.0/2.0, 47, ref_plane_id))
