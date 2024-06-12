@@ -145,9 +145,10 @@ class MarkerFactory(object):
         if positions:
             if len(positions) == 1:
                 print("Single Marker")
+                dist= part.beam.frame.point.distance_to_point(part.beam.blank_frame.point)
             for position in positions:
-                param_dicts.append(MarkerFactory.drill_params(position - 105.0/2.0, 47, ref_plane_id))
-                param_dicts.append(MarkerFactory.drill_params(position + 105.0/2.0, 47, ref_plane_id))
+                param_dicts.append(MarkerFactory.drill_params(dist + position - 105.0/2.0, 47, ref_plane_id))
+                param_dicts.append(MarkerFactory.drill_params(dist + position + 105.0/2.0, 47, ref_plane_id))
 
             for dict in param_dicts:
                 part.processings.append(BTLxDrilling.create_process(dict, "Marker"))
