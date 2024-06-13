@@ -33,14 +33,11 @@ class LHalfLapFactory(object):
         main_part = parts[str(joint.main_beam.key)]
         cross_part = parts[str(joint.cross_beam.key)]
 
-        params_dict_main = joint.btlx_params_main
-        params_dict_cross = joint.btlx_params_cross
-
-        cross_part.processings.append(BTLxLap.create_process(params_dict_cross, joint_name="L-HalfLap Joint_Cross"))
-        main_part.processings.append(BTLxLap.create_process(params_dict_main, joint_name="L-HalfLap Joint_Main"))
+        cross_part.processings.append(BTLxLap.create_process(joint.btlx_params_cross, "L-HalfLap Joint {0}".format(joint.key)))
+        main_part.processings.append(BTLxLap.create_process(joint.btlx_params_main, "L-HalfLap Joint {0}".format(joint.key)))
 
         if joint.drill_diameter > 0:
-            main_part.processings.append(BTLxDrilling.create_process(joint.btlx_drilling_params_main, "L-HalfLap Drilling"))
+            main_part.processings.append(BTLxDrilling.create_process(joint.btlx_drilling_params_main, "L-HalfLap Drilling {0}".format(joint.key)))
 
 
 BTLx.register_joint(LHalfLapJoint, LHalfLapFactory)

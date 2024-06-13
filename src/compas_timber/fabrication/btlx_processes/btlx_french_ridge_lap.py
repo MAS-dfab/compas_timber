@@ -80,7 +80,7 @@ class BTLxFrenchRidgeLap(object):
         """
 
         self.header_attributes = {
-            "Name": "French ridge lap",
+            "Name": "French ridge lap{0}".format(joint.key),
             "Process": "yes",
             "Priority": "0",
             "ProcessID": "0",

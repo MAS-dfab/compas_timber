@@ -34,7 +34,7 @@ class LButtFactory(object):
         cross_part = parts[str(joint.cross_beam.key)]
         main_cut_plane, ref_plane = joint.get_main_cutting_plane()
         cross_cut_plane = joint.get_cross_cutting_plane()
-        cross_part.processings.append(BTLxJackCut.create_process(cross_part, cross_cut_plane, "L-Butt Joint"))
+        cross_part.processings.append(BTLxJackCut.create_process(cross_part, cross_cut_plane, "L-Butt Joint{0}".format(joint.key)))
 
         if joint.mill_depth > 0:
             if joint.ends[str(cross_part.key)] == "start":
@@ -51,14 +51,14 @@ class LButtFactory(object):
                 }
 
             joint.btlx_params_cross["ReferencePlaneID"] = str(cross_part.reference_surface_from_beam_face(ref_plane))
-            cross_part.processings.append(BTLxLap.create_process(joint.btlx_params_cross, "L-Butt Joint"))
+            cross_part.processings.append(BTLxLap.create_process(joint.btlx_params_cross, "L-Butt Joint {0}".format(joint.key)))
 
         if joint.birdsmouth:
             ref_face = main_part.beam.faces[joint.main_face_index]
             joint.btlx_params_main["ReferencePlaneID"] = str(main_part.reference_surface_from_beam_face(ref_face))
-            main_part.processings.append(BTLxDoubleCut.create_process(joint.btlx_params_main, "L-Butt Joint"))
+            main_part.processings.append(BTLxDoubleCut.create_process(joint.btlx_params_main, "L-Butt Joint {0}".format(joint.key)))
         else:
-            main_part.processings.append(BTLxJackCut.create_process(main_part, main_cut_plane, "L-Butt Joint"))
+            main_part.processings.append(BTLxJackCut.create_process(main_part, main_cut_plane, "L-Butt Joint {0}".format(joint.key)))
 
 
 BTLx.register_joint(LButtJoint, LButtFactory)
