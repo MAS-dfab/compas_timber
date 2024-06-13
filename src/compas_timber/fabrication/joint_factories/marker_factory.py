@@ -24,7 +24,7 @@ class MarkerFactory(object):
         #     tag = key.split(".")[-1]
         #     print(tag, value)
 
-        intersections = set(part.intersections.values())
+        intersections = set(part.intersections)
         intersections.update({0, 1})  # Ensure 0 and 1 are included
         all_intersections = [position*part.beam.length for position in intersections]
         all_intersections.sort()

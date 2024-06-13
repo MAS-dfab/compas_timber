@@ -94,7 +94,7 @@ class Beam(Part):
         self.length = length
         self.features = []
         self._blank_extensions = {}
-        self.attributes["intersections"] = {}
+        self.attributes["intersections"] = []
         self.attributes["ID"] = None
 
     @property
