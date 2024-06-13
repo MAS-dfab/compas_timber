@@ -77,7 +77,7 @@ class TButtJoint(ButtJoint):
         cutting_plane = None
         # self.add_extensions()
         try:
-            cutting_plane = self.get_main_cutting_plane()[0]
+            cutting_plane = self.get_main_next_cutting_plane()[0]
         except AttributeError as ae:
             raise BeamJoinningError(beams=self.beams, joint=self, debug_info=str(ae), debug_geometries=[cutting_plane])
         except Exception as ex:
