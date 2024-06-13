@@ -104,7 +104,7 @@ class ButtJoint(Joint):
         self.main_beam = assemly.find_by_key(self.main_beam_key)
         self.cross_beam = assemly.find_by_key(self.cross_beam_key)
 
-    def side_surfaces_cross(self):
+    def side_surfaces_cross(self, flip=False):
         assert self.main_beam and self.cross_beam
 
         face_dict = Joint._beam_side_incidence(self.main_beam, self.cross_beam, ignore_ends=True)
@@ -112,7 +112,8 @@ class ButtJoint(Joint):
         angles = face_dict.values()
         angles, face_indices = zip(*sorted(zip(angles, face_indices)))
 
-        return [self.cross_beam.faces[(face_indices[0] + 1) % 4], self.cross_beam.faces[(face_indices[0] + 3) % 4]]
+        side_faces = [self.cross_beam.faces[(face_indices[0] + 1) % 4], self.cross_beam.faces[(face_indices[0] + 3) % 4]]
+        return side_faces
 
     def side_surfaces_main(self):
         assert self.main_beam and self.cross_beam
@@ -130,7 +131,9 @@ class ButtJoint(Joint):
         face_indices = face_dict.keys()
         angles = face_dict.values()
         angles, face_indices = zip(*sorted(zip(angles, face_indices)))
-        return self.main_beam.faces[face_indices[0]], self.main_beam.faces[face_indices[3]]
+        front_face = self.main_beam.faces[face_indices[0]]
+        back_face = self.main_beam.faces[face_indices[3]]
+        return front_face, back_face
 
     def back_surface_main(self):
         face_dict = Joint._beam_side_incidence(self.main_beam, self.cross_beam, ignore_ends=True)
@@ -149,14 +152,38 @@ class ButtJoint(Joint):
 
         return cfr, cross_mating_frame
 
+    def get_main_next_cutting_plane(self):
+        face_dict = Joint._beam_side_incidence(self.main_beam, self.cross_beam, ignore_ends=True)
+        sorted_indexes = sorted(face_dict, key=face_dict.get)
+        sorted_faces = [self.cross_beam.faces[i] for i in sorted_indexes[:2]]
+
+        side_index = [(sorted_indexes[0]+1)%4, (sorted_indexes[0]+3)%4]
+        cross_mating_frame = None
+        for face, index in zip(sorted_faces, sorted_indexes[:2]):
+            inter_pt = Plane.from_frame(face).intersection_with_line(self.main_beam.centerline)
+            if inter_pt is None:
+                continue
+            else:
+                cfr_index = index
+                dist = distance_point_line(inter_pt,self.cross_beam.centerline)
+                if dist <= self.cross_beam.width/2*math.sqrt(2):
+                    cross_mating_frame = face.copy()
+                    cfr = face.copy()
+                    cfr = Frame(face.point, face.xaxis, face.yaxis * -1.0)  # flip normal
+                    cfr.point = face.point - face.zaxis * self.mill_depth
+                    side_index = [(cfr_index+1)%4, (cfr_index+3)%4]
+
+        side_faces = [self.cross_beam.faces[side_index[0]], self.cross_beam.faces[side_index[1]]]
+        return cfr, cross_mating_frame,side_faces
+
     def subtraction_volume(self):
         """Returns the volume to be subtracted from the cross beam."""
         vertices = []
         front_frame, back_frame = self.front_back_surface_main() #main_beam
-        top_frame, bottom_frame = self.get_main_cutting_plane() #cross_beam -- cutting/offsetted_cutting plane
-        sides_cross = self.side_surfaces_cross() #cross_beam -- side faces
+        top_frame, bottom_frame, side_frames = self.get_main_next_cutting_plane() #cross_beam -- cutting/offsetted_cutting plane/side faces
+        # sides_cross = self.side_surfaces_cross(self.flip) #cross_beam -- side faces
         sides_main = self.side_surfaces_main() #main_beam -- side faces
-        for i, side in enumerate(sides_cross):
+        for i, side in enumerate(side_frames):
             points = []
             for frame in [bottom_frame, top_frame]:
                 for fr in [front_frame, back_frame]:
@@ -208,7 +235,7 @@ class ButtJoint(Joint):
 
         center = (vertices[0] + vertices[1] + vertices[2] + vertices[3]) * 0.25
         angle = angle_vectors_signed(
-            subtract_vectors(vertices[0], center), subtract_vectors(vertices[1], center), sides_cross[0].zaxis
+            subtract_vectors(vertices[0], center), subtract_vectors(vertices[1], center), side_frames[0].zaxis
         )
         if angle > 0:
             ph = Polyhedron(
@@ -371,7 +398,6 @@ class ButtJoint(Joint):
         if Angle1 > Angle2:
             Angle1, Angle2 = Angle2, Angle1
             Inclination1, Inclination2 = Inclination2, (180-Inclination1)
-        print(Inclination2)
         self.btlx_params_main = {
             "Orientation": self.ends[str(self.main_beam.key)],
             "StartX": StartX,
