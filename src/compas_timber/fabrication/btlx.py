@@ -209,7 +209,7 @@ class BTLxPart(object):
         The frame of the blank.
     blank_length : float
         The blank length of the beam.
-    intersections : list
+    intersections : dict
         A list of the intersection parameters on the beam
     processings : list
         A list of the processings applied to the beam.
