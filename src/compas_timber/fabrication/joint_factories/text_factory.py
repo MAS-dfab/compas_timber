@@ -14,7 +14,7 @@ class TextFactory(object):
     @staticmethod
     def get_engraving_position(part):
         """Finds the optimal parameter on the line for the text engraving process."""
-        intersections = set(part.intersections)
+        intersections = set(part.intersections.values())
         intersections.update({0, 1})  # Ensure 0 and 1 are included
         all_intersections = sorted(intersections)
 
