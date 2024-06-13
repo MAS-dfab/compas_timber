@@ -119,7 +119,7 @@ class ConnectionSolver(object):
             intersection_points = intersection_line_line(*pair_centerlines)
             for i, beam in enumerate(joint.beams):
                 dist_to_intersect = distance_point_point(beam.centerline.start, intersection_points[i])
-                beam.attributes["intersections"].append(dist_to_intersect / beam.centerline.length)
+                beam.attributes["intersections"]["{}_{}".format(type(joint), joint.key)] = (dist_to_intersect / beam.centerline.length)
 
 
 
