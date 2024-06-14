@@ -164,14 +164,14 @@ class ButtJoint(Joint):
             if inter_pt is None:
                 continue
             else:
-                cfr_index = index
                 dist = distance_point_line(inter_pt,self.cross_beam.centerline)
                 if dist <= self.cross_beam.width/2*math.sqrt(2):
                     cross_mating_frame = face.copy()
+                    self.reference_side_index_cross = index
                     cfr = face.copy()
                     cfr = Frame(face.point, face.xaxis, face.yaxis * -1.0)  # flip normal
                     cfr.point = face.point - face.zaxis * self.mill_depth
-                    side_index = [(cfr_index+1)%4, (cfr_index+3)%4]
+                    side_index = [(index+1)%4, (index+3)%4]
 
         side_faces = [self.cross_beam.faces[side_index[0]], self.cross_beam.faces[side_index[1]]]
         return cfr, cross_mating_frame,side_faces
