@@ -112,15 +112,16 @@ class BTLx(object):
                     self.mocap_dict[part.ID]["spacing"] = interval
                     self.existing_intervals.append(int(interval))
                 if frame_x_pos and id_face:
+                    print("id_face", id_face)
                     if not interval:
                         interval = 0
                         self.mocap_dict[part.ID]["single_marker"] = True
                     y_axis = Vector.Zaxis()
-                    if id_face == 2:
+                    if id_face == '2':
                         y_axis = -Vector.Yaxis()
-                    elif id_face == 3:
+                    elif id_face == '3':
                         y_axis = -Vector.Zaxis()
-                    elif id_face == 4:
+                    elif id_face == '4':
                         y_axis = Vector.Yaxis()
 
                     part.processings[-1].header_attributes["ReferencePlaneID"] = id_face
