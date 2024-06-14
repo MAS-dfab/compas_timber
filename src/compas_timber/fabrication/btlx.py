@@ -96,7 +96,7 @@ class BTLx(object):
             factory_type = self.REGISTERED_JOINTS.get(str(type(joint)))
             factory_type.apply_processings(joint, self.parts)
         for part in self.parts.values():
-            id_face = 1
+            id_face = '1'
             if part.ID:
                 factory_type = self.REGISTERED_FEATURES.get("TextID")
                 factory_type.apply_processings(part)
@@ -112,7 +112,6 @@ class BTLx(object):
                     self.mocap_dict[part.ID]["spacing"] = interval
                     self.existing_intervals.append(int(interval))
                 if frame_x_pos and id_face:
-                    print("id_face", id_face)
                     if not interval:
                         interval = 0
                         self.mocap_dict[part.ID]["single_marker"] = True
