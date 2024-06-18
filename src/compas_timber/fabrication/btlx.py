@@ -108,28 +108,30 @@ class BTLx(object):
             if self.do_marker_drilling:
                 factory_type = self.REGISTERED_FEATURES.get("MarkerFactory")
                 interval, frame_x_pos = factory_type.apply_processings(part, self.existing_intervals)
+                if interval == None and frame_x_pos == None:
+                    self.mocap_dict[part.ID] = "no marker"
                 if interval:
-                    self.mocap_dict[part.ID]["spacing"] = interval
+                    self.mocap_dict[part.ID]["spacing"] = int(interval)
                     self.existing_intervals.append(int(interval))
                 if frame_x_pos and id_face:
                     if not interval:
                         interval = 0
                         self.mocap_dict[part.ID]["single_marker"] = True
-                    y_axis = Vector.Zaxis()
+                    y_axis = -Vector.Yaxis()
                     if id_face == '2':
-                        y_axis = -Vector.Yaxis()
-                    elif id_face == '3':
                         y_axis = -Vector.Zaxis()
-                    elif id_face == '4':
+                    elif id_face == '3':
                         y_axis = Vector.Yaxis()
+                    elif id_face == '4':
+                        y_axis = Vector.Zaxis()
 
                     part.processings[-1].header_attributes["ReferencePlaneID"] = id_face
                     beam_point = Point(-(frame_x_pos + (interval/2.0)),0,0)
                     beam_frame = Frame(beam_point, Vector.Xaxis(), y_axis)
 
-
                     self.mocap_dict[part.ID]["beam_frame_relative_to_MoCap_Frame"] = beam_frame
 
+        print(self.existing_intervals)
 
 
 
