@@ -110,6 +110,8 @@ class BTLx(object):
                 interval, frame_x_pos = factory_type.apply_processings(part, self.existing_intervals)
                 if interval == None and frame_x_pos == None:
                     self.mocap_dict[part.ID] = "no marker"
+                if interval == None and frame_x_pos == None:
+                    self.mocap_dict[part.ID] = "no marker"
                 if interval:
                     self.mocap_dict[part.ID]["spacing"] = int(interval)
                     self.existing_intervals.append(int(interval))
@@ -118,8 +120,10 @@ class BTLx(object):
                         interval = 0
                         self.mocap_dict[part.ID]["single_marker"] = True
                     y_axis = -Vector.Yaxis()
+                    y_axis = -Vector.Yaxis()
                     if id_face == '2':
                         y_axis = -Vector.Zaxis()
+                    elif id_face == '3':
                     elif id_face == '3':
                         y_axis = Vector.Yaxis()
                     elif id_face == '4':
