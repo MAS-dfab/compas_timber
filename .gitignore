@@ -124,3 +124,4 @@ conda.recipe/
 tests/temp/
 
 src/compas_timber/planning/.secrets/
+src/compas_timber/planning/token.json

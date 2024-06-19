@@ -33,7 +33,7 @@ def main():
       creds.refresh(Request())
     else:
       flow = InstalledAppFlow.from_client_secrets_file(
-          "credentials.json", SCOPES
+          ".secrets/credentials.json", SCOPES
       )
       creds = flow.run_local_server(port=0)
     # Save the credentials for the next run
@@ -41,9 +41,6 @@ def main():
       token.write(creds.to_json())
 
   try:
-
-
-
 
 
     service = build("sheets", "v4", credentials=creds)
@@ -66,23 +63,23 @@ def main():
     module = json_load(string).copy()
     module_id = list(module.keys())[0].split("_")[0]
     start, end = get_module_range(values, module_id)
+
     print(start, end)
     for row in values[start:end]:
         beam_id = module_id + "_" + row[1]
-
+        print("Beam ID: ", beam_id)
         if row[13] == 'TRUE':
-            print("flipping beam_id", beam_id)
+            print("flipping beam")
             beam = module.get(beam_id, None)
             if beam:
-
                 frame = module[beam_id].get('beam_frame_relative_to_MoCap_Frame', None)
-                print("frame before", frame)
+                # print("frame before", frame)
                 if frame:
                     frame_after = frame.copy()
                     frame_after.yaxis = frame.yaxis * -1
 
                     module[beam_id]['beam_frame_relative_to_MoCap_Frame'] = frame_after
-                    print("frame after", module[beam_id].get('beam_frame_relative_to_MoCap_Frame', None))
+                    # print("frame after", module[beam_id].get('beam_frame_relative_to_MoCap_Frame', None))
     json_dump(module, string_out)
 
 
@@ -93,15 +90,11 @@ def main():
 
 def get_module_range(data, module_id):
     start, end = None, None
-    print("module_id", module_id)
-
     for i, row in enumerate(data):
-        if start is not None and row[0] != "" and row[0][0] != "M":
-            print("end", row[0])
+        if start is not None and row[0] != "" and row[0][0] == "M":
             end = i
             break
         if row[0][0:3]  == module_id:
-            print("start")
             start = i
 
     return start, end
