@@ -46,7 +46,7 @@ class MarkerFactory(object):
                 spacing = MarkerFactory.round_to_nearest(last_position - first_position, interval_spacing)
                 last_position = first_position + spacing
                 while last_position - first_position > min_dist:
-                    if last_position - first_position not in existing_intervals:
+                    if int(round(last_position - first_position)) not in existing_intervals:
                         return [first_position, last_position]
                     last_position -= interval_spacing
                 return [center]
@@ -79,7 +79,7 @@ class MarkerFactory(object):
                                 if last_position - min_dist < last_range[0]:                                    #while there is room to incement steps up or down
                                     do_last = False                                                                 #if not possible, stop trying bigger
 
-                            if last_position - first_position not in existing_intervals:                                #check if the smaller spacing is already taken
+                            if int(round(last_position - first_position)) not in existing_intervals:                                #check if the smaller spacing is already taken
                                 return [first_position, last_position]
                             i += 1
                 else:
@@ -146,7 +146,7 @@ class MarkerFactory(object):
             for dict in param_dicts:
                 part.processings.append(BTLxDrilling.create_process(dict, "Marker"))
             if len(positions) > 1:
-                return abs(positions[0] - positions[1]), positions[0]
+                return int(round(abs(positions[0] - positions[1]))), positions[0]
             return None, positions[0]
         return None, None
 
