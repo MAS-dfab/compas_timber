@@ -52,7 +52,7 @@ class LButtJoint(ButtJoint):
         mill_depth=0,
         birdsmouth=False,
         small_beam_butts=False,
-        modify_cross=True,
+        modify_cross=False,
         reject_i=False,
         **kwargs
     ):
@@ -105,9 +105,9 @@ class LButtJoint(ButtJoint):
         start_main, end_main = self.main_beam.extension_to_plane(extension_plane_main)
         self.main_beam.add_blank_extension(start_main + extension_tolerance, end_main + extension_tolerance, self.key)
 
-        extension_plane_cross = self.get_face_most_towards_beam(self.cross_beam, self.main_beam, ignore_ends=True)[1]
-        start_cross, end_cross = self.cross_beam.extension_to_plane(extension_plane_cross)
-        self.cross_beam.add_blank_extension(start_cross + extension_tolerance, end_cross + extension_tolerance, self.key)
+        # extension_plane_cross = self.get_face_most_towards_beam(self.cross_beam, self.main_beam, ignore_ends=True)[1]
+        # start_cross, end_cross = self.cross_beam.extension_to_plane(extension_plane_cross)
+        # self.cross_beam.add_blank_extension(start_cross + extension_tolerance, end_cross + extension_tolerance, self.key)
 
     def add_features(self):
         """Adds the required extension and trimming features to both beams.
