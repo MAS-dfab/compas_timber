@@ -188,8 +188,8 @@ class THalfLapJoint(Joint):
         BeamJoinningError
             If the elements are not compatible for the creation of the joint.
         """
-        normal_a = self.beam_a.frame.normal.unitized()
-        normal_b = self.beam_b.frame.normal.unitized()
+        normal_a = self.main_beam.frame.normal.unitized()
+        normal_b = self.cross_beam.frame.normal.unitized()
         # calculate the dot product of the two normals
         dot = abs(normal_a.dot(normal_b))
         if not (TOL.is_zero(dot) or TOL.is_close(dot, 1)):

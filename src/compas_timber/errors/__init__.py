@@ -39,7 +39,7 @@ class BeamJoinningError(Exception):
     """
 
     def __init__(self, beams, joint, debug_info=None, debug_geometries=None):
-        super(BeamJoinningError, self).__init__()
+        super(BeamJoinningError, self).__init__(debug_info)
         self.beams = beams
         self.joint = joint
         self.debug_info = debug_info
