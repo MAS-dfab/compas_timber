@@ -122,6 +122,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 * Fixed `L_TopoJointRule`, `T_TopoJointRule` and `X_TopoJointRule` for cases where `Joint.SUPPORTED_TOPOLOGY` is a single value or a list.
 * Fixed bug in `JointRule.joints_from_beams_and_rules()` that caused failures when topology was not recognized.
 * Implemented `max_distance` parameter in `JointRule.joints_from_beams_and_rules()` and `JointRule.comply` methods.
+* Changed `compas_timber._fabrication.Lap` so that the volume is generated fully from the relevant BTLx params.
+* Changed `THalfLapJoint`, `LHalfLapJoint`, `XHalfLapJoint` from `compas_timber.connections` so that they use the Lap process.
 * Bux fixes from extra comma argument and `max_distance` not implemented in `DirectRule.comply`.
 
 ### Removed
