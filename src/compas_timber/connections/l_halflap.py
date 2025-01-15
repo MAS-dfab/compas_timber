@@ -186,7 +186,7 @@ class LHalfLapJoint(Joint):
         BeamJoinningError
             If the elements are not compatible for the creation of the joint.
         """
-        if not are_beams_coplanar(self.main_beam, self.cross_beam):
+        if not are_beams_coplanar(self.beam_a, self.beam_b):
             raise BeamJoinningError(
                 beams=self.elements,
                 joint=self,
