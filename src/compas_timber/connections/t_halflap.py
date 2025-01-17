@@ -196,12 +196,27 @@ class THalfLapJoint(Joint):
                 debug_info="Beams are not coplanar",
             )
 
-
     def _get_lap_lengths(self):
         cross_lap_length = self.main_beam.side_as_surface(self.main_ref_side_index).ysize
         main_lap_length = self.cross_beam.side_as_surface(self.cross_ref_side_index).ysize
         return cross_lap_length, main_lap_length
 
     def _get_lap_depths(self):
-        lap_depth = (self.main_cutting_plane.ysize + self.cross_cutting_plane.ysize) / 2
-        return lap_depth * self.cut_plane_bias, lap_depth * (1 - self.cut_plane_bias)
+        """Returns the lap depths from the distance between the two lap faces and the bias value."""
+        main_frame = self.main_beam.ref_sides[self.main_ref_side_index]
+        cross_frame = self.cross_beam.ref_sides[self.cross_ref_side_index]
+
+        vect = main_frame.point - cross_frame.point
+        cross_vect = self.main_beam.centerline.direction.cross(self.cross_beam.centerline.direction)
+        cross_vect.unitize()
+        lap_depth = abs(cross_vect.dot(vect))
+
+        main_lap_depth = lap_depth * self.cut_plane_bias
+        cross_lap_depth = lap_depth * (1 - self.cut_plane_bias)
+
+        main_height = self.main_beam.height if self.main_ref_side_index % 2 == 0 else self.main_beam.width
+        cross_height = self.cross_beam.height if self.cross_ref_side_index % 2 == 0 else self.cross_beam.width
+
+        if main_lap_depth >= main_height or cross_lap_depth >= cross_height:  # TODO: should we instead bypass the bias and use the max. possible depth?
+            raise BeamJoinningError(beams=self.elements, joint=self, debug_info="Lap depth is bigger than the beam's height. Consider revising the bias.")
+        return main_lap_depth, cross_lap_depth
