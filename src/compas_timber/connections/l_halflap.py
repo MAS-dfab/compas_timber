@@ -1,4 +1,3 @@
-from compas.tolerance import TOL
 
 from compas_timber.errors import BeamJoinningError
 from compas_timber.fabrication import JackRafterCut
@@ -6,9 +5,9 @@ from compas_timber.fabrication import Lap
 
 from .joint import Joint
 from .solver import JointTopology
+from .utilities import are_beams_coplanar
 from .utilities import beam_ref_side_incidence
 from .utilities import beam_ref_side_incidence_with_vector
-from .utilities import are_beams_coplanar
 
 
 class LHalfLapJoint(Joint):
@@ -201,19 +200,19 @@ class LHalfLapJoint(Joint):
     def _get_lap_depths(self):
         """Returns the lap depths from the distance between the two lap faces and the bias value."""
         frame_a = self.beam_a.ref_sides[self.beam_a_ref_side_index]
-        frame_b = self.beam_b.ref_sides[self.beam_a_ref_side_index]
+        frame_b = self.beam_b.ref_sides[self.beam_b_ref_side_index]
 
         vect = frame_a.point - frame_b.point
         cross_vector = self.beam_a.centerline.direction.cross(self.beam_b.centerline.direction)
         cross_vector.unitize()
         lap_depth = abs(cross_vector.dot(vect))
 
-        main_lap_depth = lap_depth * self.cut_plane_bias
-        cross_lap_depth = lap_depth * (1 - self.cut_plane_bias)
+        beam_a_lap_depth = lap_depth * self.cut_plane_bias
+        beam_b_lap_depth = lap_depth * (1 - self.cut_plane_bias)
 
-        main_height = self.main_beam.height if self.main_ref_side_index % 2 == 0 else self.main_beam.width
-        cross_height = self.cross_beam.height if self.cross_ref_side_index % 2 == 0 else self.cross_beam.width
+        beam_a_height = self.beam_a.height if self.beam_a_ref_side_index % 2 == 0 else self.beam_a.width
+        beam_b_height = self.beam_b.height if self.beam_b_ref_side_index % 2 == 0 else self.beam_b.width
 
-        if main_lap_depth >= main_height or cross_lap_depth >= cross_height:  # TODO: should we instead bypass the bias and use the max. possible depth?
+        if beam_a_lap_depth >= beam_a_height or beam_b_lap_depth >= beam_b_height:  # TODO: should we instead bypass the bias and use the max. possible depth?
             raise BeamJoinningError(beams=self.elements, joint=self, debug_info="Lap depth is bigger than the beam's height. Consider revising the bias.")
-        return main_lap_depth, cross_lap_depth
+        return beam_a_lap_depth, beam_b_lap_depth

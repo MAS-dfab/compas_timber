@@ -1,4 +1,3 @@
-from compas.tolerance import TOL
 
 from compas_timber.errors import BeamJoinningError
 from compas_timber.fabrication import JackRafterCut
@@ -6,9 +5,9 @@ from compas_timber.fabrication import Lap
 
 from .joint import Joint
 from .solver import JointTopology
+from .utilities import are_beams_coplanar
 from .utilities import beam_ref_side_incidence
 from .utilities import beam_ref_side_incidence_with_vector
-from .utilities import are_beams_coplanar
 
 
 class THalfLapJoint(Joint):

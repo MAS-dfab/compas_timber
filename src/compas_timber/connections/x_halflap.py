@@ -1,13 +1,12 @@
-from compas.tolerance import TOL
 
 from compas_timber.errors import BeamJoinningError
 from compas_timber.fabrication import Lap
 
 from .joint import Joint
 from .solver import JointTopology
+from .utilities import are_beams_coplanar
 from .utilities import beam_ref_side_incidence
 from .utilities import beam_ref_side_incidence_with_vector
-from .utilities import are_beams_coplanar
 
 
 class XHalfLapJoint(Joint):
@@ -168,7 +167,7 @@ class XHalfLapJoint(Joint):
     def _get_lap_depths(self):
         """Returns the lap depths from the distance between the two lap faces and the bias value."""
         frame_a = self.beam_a.ref_sides[self.beam_a_ref_side_index]
-        frame_b = self.beam_b.ref_sides[self.beam_a_ref_side_index]
+        frame_b = self.beam_b.ref_sides[self.beam_b_ref_side_index]
 
         vect = frame_a.point - frame_b.point
         cross_vector = self.beam_a.centerline.direction.cross(self.beam_b.centerline.direction)
