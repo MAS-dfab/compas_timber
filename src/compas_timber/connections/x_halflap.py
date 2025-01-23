@@ -1,3 +1,5 @@
+from compas.geometry import Vector
+from compas.geometry import intersection_line_line
 
 from compas_timber.errors import BeamJoinningError
 from compas_timber.fabrication import Lap
@@ -60,9 +62,13 @@ class XHalfLapJoint(Joint):
         self.beam_a_guid = kwargs.get("beam_a_guid", None) or str(beam_a.guid)
         self.beam_b_guid = kwargs.get("beam_b_guid", None) or str(beam_b.guid)
 
-        self.flip_lap_side = flip_lap_side
+        self.flip_lap_side = False
         self.cut_plane_bias = 0.5 if cut_plane_bias is None else cut_plane_bias
         self.features = []
+
+        self.flip = self.get_flip_lap_side_flag()
+        if flip_lap_side:
+            self.flip = not self.flip
 
     @property
     def elements(self):
@@ -72,7 +78,7 @@ class XHalfLapJoint(Joint):
     def beam_a_ref_side_index(self):
         cross_vector = self.beam_a.centerline.direction.cross(self.beam_b.centerline.direction)
         ref_side_dict = beam_ref_side_incidence_with_vector(self.beam_a, cross_vector, ignore_ends=True)
-        if self.flip_lap_side:
+        if self.flip:
             return max(ref_side_dict, key=ref_side_dict.get)
         return min(ref_side_dict, key=ref_side_dict.get)
 
@@ -80,7 +86,7 @@ class XHalfLapJoint(Joint):
     def beam_b_ref_side_index(self):
         cross_vector = self.beam_a.centerline.direction.cross(self.beam_b.centerline.direction)
         ref_side_dict = beam_ref_side_incidence_with_vector(self.beam_b, cross_vector, ignore_ends=True)
-        if self.flip_lap_side:
+        if self.flip:
             return min(ref_side_dict, key=ref_side_dict.get)
         return max(ref_side_dict, key=ref_side_dict.get)
 
@@ -97,6 +103,11 @@ class XHalfLapJoint(Joint):
         ref_side_dict = beam_ref_side_incidence(self.beam_b, self.beam_a, ignore_ends=True)
         ref_side_index = max(ref_side_dict, key=ref_side_dict.get)
         return self.beam_a.side_as_surface(ref_side_index)
+
+    def get_flip_lap_side_flag(self):
+        offset_vector = Vector(*intersection_line_line(self.beam_a.centerline, self.beam_b.centerline))
+        cross_vector = self.beam_a.centerline.direction.cross(self.beam_b.centerline.direction)
+        return cross_vector.dot(offset_vector) < 0
 
     def add_features(self):
         """Adds the required extension and trimming features to both beams.

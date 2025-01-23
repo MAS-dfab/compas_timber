@@ -1,3 +1,5 @@
+from compas.geometry import Vector
+from compas.geometry import intersection_line_line
 
 from compas_timber.errors import BeamJoinningError
 from compas_timber.fabrication import JackRafterCut
@@ -66,6 +68,10 @@ class THalfLapJoint(Joint):
         self.cut_plane_bias = 0.5 if cut_plane_bias is None else cut_plane_bias
         self.features = []
 
+        self.flip = self.get_flip_lap_side_flag()
+        if flip_lap_side:
+            self.flip = not self.flip
+
     @property
     def elements(self):
         return [self.main_beam, self.cross_beam]
@@ -74,7 +80,7 @@ class THalfLapJoint(Joint):
     def cross_ref_side_index(self):
         cross_vector = self.main_beam.centerline.direction.cross(self.cross_beam.centerline.direction)
         ref_side_dict = beam_ref_side_incidence_with_vector(self.cross_beam, cross_vector, ignore_ends=True)
-        if self.flip_lap_side:
+        if self.flip:
             return max(ref_side_dict, key=ref_side_dict.get)
         return min(ref_side_dict, key=ref_side_dict.get)
 
@@ -82,7 +88,7 @@ class THalfLapJoint(Joint):
     def main_ref_side_index(self):
         cross_vector = self.main_beam.centerline.direction.cross(self.cross_beam.centerline.direction)
         ref_side_dict = beam_ref_side_incidence_with_vector(self.main_beam, cross_vector, ignore_ends=True)
-        if self.flip_lap_side:
+        if self.flip:
             return min(ref_side_dict, key=ref_side_dict.get)
         return max(ref_side_dict, key=ref_side_dict.get)
 
@@ -99,6 +105,11 @@ class THalfLapJoint(Joint):
         ref_side_dict = beam_ref_side_incidence(self.main_beam, self.cross_beam, ignore_ends=True)
         ref_side_index = max(ref_side_dict, key=ref_side_dict.get)
         return self.cross_beam.side_as_surface(ref_side_index)
+
+    def get_flip_lap_side_flag(self):
+        offset_vector = Vector(*intersection_line_line(self.beam_a.centerline, self.beam_b.centerline))
+        cross_vector = self.beam_a.centerline.direction.cross(self.beam_b.centerline.direction)
+        return cross_vector.dot(offset_vector) < 0
 
     def add_extensions(self):
         """Calculates and adds the necessary extensions to the beams.
