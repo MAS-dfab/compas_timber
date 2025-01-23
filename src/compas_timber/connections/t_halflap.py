@@ -107,7 +107,7 @@ class THalfLapJoint(Joint):
         return self.cross_beam.side_as_surface(ref_side_index)
 
     def get_flip_lap_side_flag(self):
-        offset_vector = Vector(*intersection_line_line(self.main_beam.centerline, self.cross_beam.centerline))
+        offset_vector = Vector.from_start_end(*intersection_line_line(self.main_beam.centerline, self.cross_beam.centerline))
         cross_vector = self.main_beam.centerline.direction.cross(self.cross_beam.centerline.direction)
         return cross_vector.dot(offset_vector) < 0
 

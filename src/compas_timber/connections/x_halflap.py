@@ -105,7 +105,7 @@ class XHalfLapJoint(Joint):
         return self.beam_a.side_as_surface(ref_side_index)
 
     def get_flip_lap_side_flag(self):
-        offset_vector = Vector(*intersection_line_line(self.beam_a.centerline, self.beam_b.centerline))
+        offset_vector = Vector.from_start_end(*intersection_line_line(self.beam_a.centerline, self.beam_b.centerline))
         cross_vector = self.beam_a.centerline.direction.cross(self.beam_b.centerline.direction)
         return cross_vector.dot(offset_vector) < 0
 
