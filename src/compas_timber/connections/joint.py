@@ -184,6 +184,17 @@ class Joint(Data):
         else:
             return len(elements) >= cls.MIN_ELEMENT_COUNT
 
+    def add_extensions(self):
+        """Adds the features defined by this joint to affected beam(s).
+
+        Raises
+        ------
+        :class:`~compas_timber.connections.BeamJoinningError`
+            Should be raised whenever the joint was not able to calculate the features to be applied to the beams.
+
+        """
+        raise NotImplementedError
+
     def add_features(self):
         """Adds the features defined by this joint to affected beam(s).
 
