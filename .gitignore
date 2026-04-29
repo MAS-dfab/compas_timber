@@ -44,6 +44,7 @@ nosetests.xml
 coverage.xml
 *.cover
 .hypothesis/
+TestResults/
 
 # Translations
 *.mo
@@ -103,8 +104,6 @@ ENV/
 # compas_timber
 # ==============================================================================
 
-src/compas_timber/ghpython/components/ghuser/*.ghuser
-
 *.3dmbak
 *.rhl
 *.rui_bak
@@ -116,6 +115,8 @@ temp/**
 
 .vscode
 
+.vs
+
 .idea
 
 docs/api/generated/
@@ -123,5 +124,4 @@ docs/api/generated/
 conda.recipe/
 tests/temp/
 
-src/compas_timber/planning/.secrets/
-src/compas_timber/planning/token.json
+src/*.btlx

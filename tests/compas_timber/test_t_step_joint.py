@@ -1,0 +1,182 @@
+import pytest
+from unittest.mock import patch
+
+from compas.data import json_dumps
+from compas.data import json_loads
+from compas.geometry import Line
+from compas.geometry import Point
+
+from compas_timber.connections import TStepJoint
+from compas_timber.elements import Beam
+from compas_timber.fabrication import StepShapeType
+from compas_timber.model import TimberModel
+
+
+@pytest.fixture
+def beams():
+    """Create test fixtures with beams in T-topology."""
+    # Create main beam (horizontal)
+    main_centerline = Line(Point(0, 0, 0), Point(1000, 0, 0))
+    main_beam = Beam.from_centerline(main_centerline, width=100, height=200)
+
+    # Create cross beam (vertical, intersecting main beam)
+    cross_centerline = Line(Point(500, -300, 0), Point(500, 300, 0))
+    cross_beam = Beam.from_centerline(cross_centerline, width=120, height=150)
+
+    return main_beam, cross_beam
+
+
+def test_t_step_joint_creation_with_beams(beams):
+    """Test that TStepJoint can be created with valid beam arguments."""
+    main_beam, cross_beam = beams
+    joint = TStepJoint(main_beam=main_beam, cross_beam=cross_beam, step_shape=StepShapeType.STEP, step_depth=25.0, heel_depth=0.0)
+
+    assert joint.main_beam == main_beam
+    assert joint.cross_beam == cross_beam
+    assert joint.step_shape == StepShapeType.STEP
+    assert joint.step_depth == 25.0
+    assert joint.heel_depth == 0.0
+
+
+def test_t_step_joint_creation_with_beams_and_model(beams):
+    """Test that TStepJoint can be created without beam arguments (deserialization case)."""
+    main_beam, cross_beam = beams
+    model = TimberModel()
+    model.add_elements(beams)
+
+    # This tests the fix for the deserialization issue
+    joint = TStepJoint.create(model, main_beam=main_beam, cross_beam=cross_beam, step_shape=StepShapeType.HEEL, step_depth=0.0, heel_depth=25.0)
+
+    assert joint.main_beam == main_beam
+    assert joint.cross_beam == cross_beam
+    assert joint.step_shape == StepShapeType.HEEL
+    assert joint.step_depth == 0.0
+    assert joint.heel_depth == 25.0
+
+
+def test_t_step_joint_serialization_deserialization(beams):
+    """Test that TStepJoint can be serialized and deserialized without errors."""
+    main_beam, cross_beam = beams
+
+    # Create joint with beams
+    original_joint = TStepJoint(main_beam=main_beam, cross_beam=cross_beam, step_shape=StepShapeType.TAPERED_HEEL, step_depth=0.0, heel_depth=20.0, tenon_mortise_height=40.0)
+
+    # Serialize to data
+    data = original_joint.__data__
+
+    # Deserialize from data (this should not raise errors)
+    deserialized_joint = TStepJoint.__from_data__(data)
+
+    # Check that deserialized joint has correct properties
+    assert deserialized_joint.step_shape == StepShapeType.TAPERED_HEEL
+    assert deserialized_joint.step_depth == 0.0
+    assert deserialized_joint.heel_depth == 20.0
+    assert deserialized_joint.tenon_mortise_height == 40.0
+    assert deserialized_joint.element_guids[0] == str(main_beam.guid)
+    assert deserialized_joint.element_guids[1] == str(cross_beam.guid)
+
+    # Beams should be None after deserialization (before restoration)
+    assert deserialized_joint.main_beam is None
+    assert deserialized_joint.cross_beam is None
+
+
+def test_t_step_joint_beam_restoration_from_keys(beams):
+    """Test that beams can be restored from GUIDs after deserialization."""
+    main_beam, cross_beam = beams
+    model = TimberModel()
+    model.add_elements(beams)
+
+    # Create joint and serialize
+    original_joint = TStepJoint(main_beam=main_beam, cross_beam=cross_beam, step_shape=StepShapeType.STEP)
+    data = original_joint.__data__
+
+    # Deserialize
+    deserialized_joint = TStepJoint.__from_data__(data)
+
+    # Restore beams from model
+    deserialized_joint.restore_elements_from_keys(model)
+
+    # Check that beams are properly restored
+    assert deserialized_joint.main_beam == main_beam
+    assert deserialized_joint.cross_beam == cross_beam
+
+
+def test_step_depths_calculation(beams):
+    """Test that step depths are calculated correctly based on step_shape."""
+    main_beam, cross_beam = beams
+
+    # Test STEP shape
+    joint_step = TStepJoint(main_beam=main_beam, cross_beam=cross_beam, step_shape=StepShapeType.STEP)
+    joint_step._set_unset_attributes()
+    assert joint_step.step_depth > 0
+    assert joint_step.heel_depth == 0.0
+
+    # Test HEEL shape
+    joint_heel = TStepJoint(main_beam=main_beam, cross_beam=cross_beam, step_shape=StepShapeType.HEEL)
+    joint_heel._set_unset_attributes()
+    assert joint_heel.step_depth == 0.0
+    assert joint_heel.heel_depth > 0
+
+    # Test TAPERED_HEEL shape
+    joint_tapered = TStepJoint(main_beam=main_beam, cross_beam=cross_beam, step_shape=StepShapeType.TAPERED_HEEL)
+    joint_tapered._set_unset_attributes()
+    assert joint_tapered.step_depth == 0.0
+    assert joint_tapered.heel_depth > 0
+
+    # Test DOUBLE shape
+    joint_double = TStepJoint(main_beam=main_beam, cross_beam=cross_beam, step_shape=StepShapeType.DOUBLE)
+    joint_double._set_unset_attributes()
+    assert joint_double.step_depth > 0
+    assert joint_double.heel_depth > 0
+
+
+def test_t_step_joint_defaults_resolved_at_init(beams):
+    """Test that default depths are resolved at construction time, without requiring add_features()."""
+    main_beam, cross_beam = beams
+    joint = TStepJoint(main_beam=main_beam, cross_beam=cross_beam)  # no explicit depths
+
+    # _set_unset_attributes() must have been called in __init__
+    assert joint.step_depth is not None
+    assert joint.heel_depth is not None
+    assert joint.step_depth > 0  # STEP shape: cross_beam.height / 4
+    assert joint.heel_depth == 0.0  # STEP shape has no heel component
+
+
+def test_t_step_joint_model_roundtrip_preserves_state(beams):
+    """Test that calculated attributes are identical before and after a model serialize/deserialize round-trip.
+
+    This proves the fix: restore_beams_from_keys() must call _set_unset_attributes() so that
+    joint state is fully consistent without requiring a subsequent call to add_features().
+    """
+    main_beam, cross_beam = beams
+    model = TimberModel()
+    model.add_elements(beams)
+    joint = TStepJoint.create(model, main_beam=main_beam, cross_beam=cross_beam)
+
+    step_depth_before = joint.step_depth
+    heel_depth_before = joint.heel_depth
+
+    restored_model = json_loads(json_dumps(model))
+    restored_joint = list(restored_model.joints)[0]
+
+    # Attributes must be resolved immediately after deserialization — no add_features() call
+    assert restored_joint.step_depth == step_depth_before
+    assert restored_joint.heel_depth == heel_depth_before
+
+
+def test_t_step_joint_restore_beams_resolves_attributes(beams):
+    """Test that restore_beams_from_keys() calls _set_unset_attributes(), but __from_data__ alone does not."""
+    main_beam, cross_beam = beams
+    model = TimberModel()
+    model.add_elements(beams)
+
+    original_joint = TStepJoint(main_beam=main_beam, cross_beam=cross_beam)
+    data = original_joint.__data__
+    deserialized_joint = TStepJoint.__from_data__(data)
+
+    with patch.object(deserialized_joint, "_set_unset_attributes", wraps=deserialized_joint._set_unset_attributes) as spy:
+        assert spy.call_count == 0  # not called yet — beams are absent
+
+        deserialized_joint.restore_elements_from_keys(model)
+
+        assert spy.call_count == 1  # called exactly once by restore_beams_from_keys()

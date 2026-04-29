@@ -1,11 +1,7 @@
-from compas_timber.parts import CutFeature
-from compas_timber.parts import MillVolume
-from compas_timber.parts import BrepSubtraction
-
-from .joint import BeamJoinningError
-from .solver import JointTopology
+from compas_timber.errors import BeamJoiningError
 
 from .butt_joint import ButtJoint
+from .solver import JointTopology
 
 
 class LButtJoint(ButtJoint):
@@ -13,146 +9,79 @@ class LButtJoint(ButtJoint):
 
     This joint type is compatible with beams in L topology.
 
-    Please use `LButtJoint.create()` to properly create an instance of this class and associate it with an assembly.
+    Please use `LButtJoint.create()` to properly create an instance of this class and associate it with a model.
 
     Parameters
     ----------
-    main_beam : :class:`~compas_timber.parts.Beam`
+    main_beam : :class:`~compas_timber.elements.Beam`
         The main beam to be joined.
-    cross_beam : :class:`~compas_timber.parts.Beam`
+    cross_beam : :class:`~compas_timber.elements.Beam`
         The cross beam to be joined.
+    mill_depth : float
+        The depth of the pocket to be milled in the cross beam. This will be ignored if `butt_plane` is provided.
     small_beam_butts : bool, default False
         If True, the beam with the smaller cross-section will be trimmed. Otherwise, the main beam will be trimmed.
-    modify_cross : bool, default True
+    modify_cross : bool, default False
         If True, the cross beam will be extended to the opposite face of the main beam and cut with the same plane.
+    butt_plane : :class:`~compas.geometry.Plane`, optional
+        The plane used to cut the main beam. If not provided, the closest side of the cross beam will be used.
+    back_plane : :class:`~compas.geometry.Plane`, optional
+        The plane used to cut the cross beam. If not provided, the back side of the main beam will be used.
     reject_i : bool, default False
-        If True, the joint will be rejected if the beams are not in I topology (i.e. main butts at crosses end).
+        If True, the joint will reject beams in I topology.
+
 
     Attributes
     ----------
-    main_beam : :class:`~compas_timber.parts.Beam`
+    main_beam : :class:`~compas_timber.elements.Beam`
         The main beam to be joined.
-    cross_beam : :class:`~compas_timber.parts.Beam`
+    cross_beam : :class:`~compas_timber.elements.Beam`
         The cross beam to be joined.
-    small_beam_butts : bool, default False
-        If True, the beam with the smaller cross-section will be trimmed. Otherwise, the main beam will be trimmed.
-    modify_cross : bool, default True
+    mill_depth : float
+        The depth of the pocket to be milled in the cross beam.
+    modify_cross : bool, default False
         If True, the cross beam will be extended to the opposite face of the main beam and cut with the same plane.
+    butt_plane : :class:`~compas.geometry.Plane`, optional
+        The plane used to cut the main beam. If not provided, the closest side of the cross beam will be used.
+    back_plane : :class:`~compas.geometry.Plane`, optional
+        The plane used to cut the cross beam. If not provided, the back side of the main beam will be used.
     reject_i : bool, default False
-        If True, the joint will be rejected if the beams are not in I topology (i.e. main butts at crosses end).
+        If True, the joint will reject beams in I topology.
 
     """
 
     SUPPORTED_TOPOLOGY = JointTopology.TOPO_L
 
-    def __init__(
-        self,
-        main_beam=None,
-        cross_beam=None,
-        mill_depth=0,
-        birdsmouth=False,
-        small_beam_butts=False,
-        modify_cross=False,
-        reject_i=False,
-        **kwargs
-    ):
-        if small_beam_butts and main_beam and cross_beam:
-            if main_beam.width * main_beam.height > cross_beam.width * cross_beam.height:
-                main_beam, cross_beam = cross_beam, main_beam
-
-        super(LButtJoint, self).__init__(main_beam, cross_beam, mill_depth, birdsmouth, **kwargs)
-        self.modify_cross = modify_cross
-        self.small_beam_butts = small_beam_butts
-        self.reject_i = reject_i
-
     @property
     def __data__(self):
-        data_dict = {
-            "small_beam_butts": self.small_beam_butts,
-            "modify_cross": self.modify_cross,
-            "reject_i": self.reject_i,
-        }
-        data_dict.update(super(LButtJoint, self).__data__)
-        return data_dict
+        data = super(LButtJoint, self).__data__
+        data["back_plane"] = self.back_plane
+        data["reject_i"] = self.reject_i
+        return data
 
-    def get_cross_cutting_plane(self):
-        assert self.main_beam and self.cross_beam
-        _, cfr = self.get_face_most_towards_beam(self.cross_beam, self.main_beam, ignore_ends=True)
-        return cfr
+    def __init__(self, main_beam=None, cross_beam=None, mill_depth=None, modify_cross=True, reject_i=False, butt_plane=None, back_plane=None, **kwargs):
+        super(LButtJoint, self).__init__(main_beam=main_beam, cross_beam=cross_beam, mill_depth=mill_depth, modify_cross=modify_cross, butt_plane=butt_plane, **kwargs)
+        self.reject_i = reject_i
+        self.back_plane = back_plane
 
-    def get_main_cutting_plane(self):
-        assert self.main_beam and self.cross_beam
+    @property
+    def main_beam_ref_side_index(self):
+        ref_side_index = super(LButtJoint, self).main_beam_ref_side_index
 
-        index, _ = self.get_face_most_towards_beam(self.main_beam, self.cross_beam, ignore_ends=False)
-        if self.reject_i and index in [4, 5]:
-            raise BeamJoinningError(
-                beams=self.beams, joint=self, debug_info="Beams are in I topology and reject_i flag is True"
-            )
-        return super(LButtJoint, self).get_main_cutting_plane()
+        beam_meet_at_ends = ref_side_index in (4, 5)
 
-    def add_extensions(self):
-        """Adds the required extensions to both beams.
+        if self.reject_i and beam_meet_at_ends:
+            raise BeamJoiningError(beams=self.elements, joint=self, debug_info="Beams are in I topology and reject_i flag is True")
 
-        This method is automatically called when joint is created by the call to `Joint.create()`.
+        return ref_side_index
 
-        """
-        assert self.main_beam and self.cross_beam
-        extension_tolerance = 0.01  # TODO: this should be proportional to the unit used
-        if self.birdsmouth:
-            extension_plane_main = self.get_face_most_towards_beam(self.main_beam, self.cross_beam, ignore_ends=True)[1]
-        else:
-            extension_plane_main = self.get_face_most_ortho_to_beam(self.main_beam, self.cross_beam, ignore_ends=True)[1]
-        start_main, end_main = self.main_beam.extension_to_plane(extension_plane_main)
-        self.main_beam.add_blank_extension(start_main + extension_tolerance, end_main + extension_tolerance, self.key)
-
-        # extension_plane_cross = self.get_face_most_towards_beam(self.cross_beam, self.main_beam, ignore_ends=True)[1]
-        # start_cross, end_cross = self.cross_beam.extension_to_plane(extension_plane_cross)
-        # self.cross_beam.add_blank_extension(start_cross + extension_tolerance, end_cross + extension_tolerance, self.key)
-
-    def add_features(self):
-        """Adds the required extension and trimming features to both beams.
-
-        This method is automatically called when joint is created by the call to `Joint.create()`.
-
-        """
-        assert self.main_beam and self.cross_beam  # should never happen
-        if self.features:
-            self.main_beam.remove_features(self.features)
-        start_main, start_cross = None, None
-
-        try:
-            main_cutting_plane = self.get_main_cutting_plane()[0]
-            cross_cutting_plane = self.get_cross_cutting_plane()
-
-        except BeamJoinningError as be:
-            raise be
-        except AttributeError as ae:
-            # I want here just the plane that caused the error
-            geometries = [cross_cutting_plane] if start_main is not None else [main_cutting_plane]
-            raise BeamJoinningError(beams=self.beams, joint=self, debug_info=str(ae), debug_geometries=geometries)
-        except Exception as ex:
-            raise BeamJoinningError(beams=self.beams, joint=self, debug_info=str(ex))
-
-        if self.modify_cross:
-
-            f_cross = CutFeature(cross_cutting_plane)
-            self.cross_beam.add_features(f_cross)
-            self.features.append(f_cross)
-
-        if self.mill_depth:
-            self.cross_beam.add_features(MillVolume(self.subtraction_volume()))
-            self.features.append(MillVolume(self.subtraction_volume()))
-
-        do_jack = False
-        if self.birdsmouth:
-            if self.calc_params_birdsmouth():
-                self.main_beam.add_features(BrepSubtraction(self.bm_sub_volume))
-                self.features.append(BrepSubtraction(self.bm_sub_volume))
-
-            else:
-                do_jack = True
-        if do_jack:
-            f_main = CutFeature(main_cutting_plane)
-            self.main_beam.add_features(f_main)
-            self.features.append(f_main)
-
+    @classmethod
+    def create(
+        cls, model, main_beam=None, cross_beam=None, mill_depth=None, small_beam_butts=False, modify_cross=True, reject_i=False, butt_plane=None, back_plane=None, **kwargs
+    ):
+        if small_beam_butts:
+            if main_beam.width * main_beam.height > cross_beam.width * cross_beam.height:
+                main_beam, cross_beam = cross_beam, main_beam
+        joint = cls(main_beam, cross_beam, mill_depth, modify_cross, reject_i, butt_plane, back_plane, **kwargs)
+        model.add_joint(joint)
+        return joint
