@@ -104,8 +104,8 @@ class StepJointNotch(BTLxProcessing):
         strut_height=20.0,
         step_shape=StepShapeType.DOUBLE,
         mortise=False,
-        mortise_width=40.0,
-        mortise_height=40.0,
+        mortise_width=0.0,
+        mortise_height=0.0,
         **kwargs
     ):
         super(StepJointNotch, self).__init__(**kwargs)

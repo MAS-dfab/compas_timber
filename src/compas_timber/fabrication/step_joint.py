@@ -84,8 +84,8 @@ class StepJoint(BTLxProcessing):
         heel_depth=20.0,
         step_shape=StepShapeType.DOUBLE,
         tenon=False,
-        tenon_width=40.0,
-        tenon_height=40.0,
+        tenon_width=0.0,
+        tenon_height=0.0,
         **kwargs
     ):
         super(StepJoint, self).__init__(**kwargs)
