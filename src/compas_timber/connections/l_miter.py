@@ -135,28 +135,20 @@ class LMiterJoint(Joint):
             miter_plane = self._get_cut_planes_from_ref_sides()
             return self._get_cut_planes_from_miter_plane(miter_plane)
         # default bisector miter plane
-        vA = Vector(*self.beam_a.frame.xaxis)  # frame.axis gives a reference, not a copy
-        vB = Vector(*self.beam_b.frame.xaxis)
-        # intersection point (average) of both centrelines
-        p = self.location
-        if not p:
-            [pxA, tA], [pxB, tB] = intersection_line_line_param(
-                self.beam_a.centerline,
-                self.beam_b.centerline,
-                max_distance=float("inf"),
-                limit_to_segments=False,
-            )
-            # TODO: add error-trap + solution for I-miter joints
+        # intersection point (average) of two main beam centrelines
+        [pxA, tA], [pxB, tB] = intersection_line_line_param(
+            self.main_beam_a.centerline,
+            self.main_beam_b.centerline,
+            max_distance=float("inf"),
+            limit_to_segments=False,
+        )
+        # TODO: add error-trap + solution for I-miter joints
 
-            p = Point((pxA.x + pxB.x) * 0.5, (pxA.y + pxB.y) * 0.5, (pxA.z + pxB.z) * 0.5)
+        p = Point((pxA.x + pxB.x) * 0.5, (pxA.y + pxB.y) * 0.5, (pxA.z + pxB.z) * 0.5)
 
-        # makes sure they point outward of a joint point
-        tA, _ = self.beam_a.endpoint_closest_to_point(p)
-        if tA == "end":
-            vA *= -1.0
-        tB, _ = self.beam_b.endpoint_closest_to_point(p)
-        if tB == "end":
-            vB *= -1.0
+        # makes sure they point outward of a joint point, and are unitized
+        vA = self.point_centerline_towards_joint(self.main_beam_a, p).unitized()
+        vB = self.point_centerline_towards_joint(self.main_beam_b, p).unitized()
 
         # bisector
         v_bisector = vA + vB
